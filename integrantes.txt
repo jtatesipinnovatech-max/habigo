@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 Jhon Sebastian Tates Tobar  1151950028
+=======
+Emmanuel Ospina Giraldo.
+>>>>>>> 7363db127bc93716ccd8a894ec852b6120e73206
