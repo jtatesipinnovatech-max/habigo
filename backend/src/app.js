@@ -4,6 +4,8 @@ const cors = require('cors');
 const app = express();
 
 const userRoutes = require('./routes/userRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Middlewares
 app.use(cors());
@@ -11,6 +13,8 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/users', userRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
   res.send('HabiGo API funcionando 🚀');
