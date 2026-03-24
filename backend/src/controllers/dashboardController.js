@@ -15,8 +15,8 @@ const getDashboard = async (req, res) => {
     );
 
     res.json({
-      total_properties: properties.rows[0].count,
-      total_bookings: bookings.rows[0].count
+      total_properties: Number(properties.rows[0].count),
+      total_bookings: Number(bookings.rows[0].count)
     });
 
   } catch (error) {
