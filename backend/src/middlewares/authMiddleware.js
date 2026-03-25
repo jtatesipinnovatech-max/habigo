@@ -1,16 +1,21 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  if (!authHeader) {
     return res.status(401).json({ message: 'No autorizado' });
   }
 
   try {
-    const decoded = jwt.verify(token.split(' ')[1], 'secreto');
+    const token = authHeader.split(' ')[1];
+
+    const decoded = jwt.verify(token, 'secreto');
+
     req.user = decoded;
+
     next();
+
   } catch (error) {
     return res.status(401).json({ message: 'Token inválido' });
   }
