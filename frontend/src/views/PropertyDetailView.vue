@@ -1,5 +1,6 @@
 <template>
   <div class="p-4 max-w-3xl mx-auto">
+
     <button @click="$router.back()" class="mb-4 text-primary">
       ← Volver
     </button>
@@ -13,24 +14,35 @@
       ${{ property.price }} / noche
     </p>
 
-    <p class="mt-2">⭐ {{ property.rating }}</p>
-
     <button
-      class="bg-primary text-white px-4 py-2 rounded-xl mt-4 w-full"
+      @click="book"
+      class="btn-primary w-full py-3 mt-4 text-lg font-semibold"
     >
       Reservar
     </button>
+
   </div>
 </template>
 
 <script setup>
 import { useRoute } from "vue-router";
 import { usePropertyStore } from "../stores/property";
+import { useBookingStore } from "../stores/booking";
 
 const route = useRoute();
 const store = usePropertyStore();
+const bookingStore = useBookingStore();
 
 const property = store.properties.find(
   (p) => p.id === Number(route.params.id)
 );
+
+const book = async () => {
+  await bookingStore.createBooking({
+    propertyId: property.id,
+    date: new Date(),
+  });
+
+  alert("Reserva realizada");
+};
 </script>

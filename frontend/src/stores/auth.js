@@ -4,42 +4,23 @@ import api from "../services/api";
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
-    token: localStorage.getItem("token") || null,
+    token: localStorage.getItem("token"),
     isAuthenticated: !!localStorage.getItem("token"),
-    loading: false,
-    error: null,
   }),
 
   actions: {
-    async login(credentials) {
-      this.loading = true;
-      this.error = null;
-
+    async login(data) {
       try {
-        const res = await api.post("/auth/login", credentials);
+        const res = await api.post("/users/login", data);
 
         this.token = res.data.token;
-        this.user = res.data.user;
+        this.user = { email: data.email };
         this.isAuthenticated = true;
 
         localStorage.setItem("token", this.token);
-      } catch (err) {
-        this.error = "Credenciales incorrectas";
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async register(data) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        await api.post("/auth/register", data);
-      } catch (err) {
-        this.error = "Error en registro";
-      } finally {
-        this.loading = false;
+      } catch (error) {
+        console.error(error.response?.data);
+        alert(error.response?.data?.message || "Error en login");
       }
     },
 
