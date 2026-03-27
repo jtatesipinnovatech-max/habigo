@@ -15,3 +15,11 @@ CREATE TABLE properties (
   user_id INTEGER,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE bookings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER,
+  property_id INTEGER,
+  start_date DATE,
+  end_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
