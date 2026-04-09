@@ -1,15 +1,44 @@
 <template>
   <div
     @click="goToDetail"
-    class="bg-white rounded-2xl shadow-md p-3 hover:shadow-lg transition cursor-pointer"
+    class="cursor-pointer group"
   >
-    <img :src="property.image" class="rounded-xl mb-2" />
+    <!-- IMAGEN -->
+    <div class="relative overflow-hidden rounded-2xl">
+      <img
+        :src="property.image"
+        class="w-full h-56 object-cover transition duration-300 group-hover:scale-105"
+      />
 
-    <h3 class="font-semibold">{{ property.title }}</h3>
-    <p class="text-sm text-gray-500">{{ property.location }}</p>
+      <!-- FAVORITO (decorativo) -->
+      <div class="absolute top-3 right-3 bg-white/80 backdrop-blur p-1 rounded-full">
+        ❤️
+      </div>
+    </div>
 
-    <p class="font-bold">${{ property.price }}/noche</p>
-    <p>⭐ {{ property.rating }}</p>
+    <!-- INFO -->
+    <div class="mt-2 px-1">
+
+      <div class="flex justify-between items-center">
+        <h3 class="font-semibold text-sm">
+          {{ property.location }}
+        </h3>
+
+        <p class="text-sm font-medium">
+          ⭐ {{ property.rating }}
+        </p>
+      </div>
+
+      <p class="text-gray-500 text-sm truncate">
+        {{ property.title }}
+      </p>
+
+      <p class="mt-1">
+        <span class="font-semibold">${{ property.price }}</span>
+        <span class="text-gray-500 text-sm"> / noche</span>
+      </p>
+
+    </div>
   </div>
 </template>
 
