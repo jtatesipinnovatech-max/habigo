@@ -1,3 +1,7 @@
-Jhon Sebastian Tates Tobar  1151950028
+Jhon Sebastian Tates Tobar 1151950028
 Emmanuel Ospina Giraldo.
+<<<<<<< HEAD
 Juan Felipe Mur Lasso
+=======
+Juan Felipe Mur Lasso
+>>>>>>> dc0b3dc8cbfff90e25abf28093f6e860b58becf2
