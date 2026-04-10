@@ -16,7 +16,7 @@
 
         <div class="px-6 py-2 border-r hover:bg-gray-100 cursor-pointer min-w-[150px]" @click.stop="toggleMenu('dates')">
           <p class="text-[10px] font-bold uppercase text-black">Fechas</p>
-          <p class="text-sm" :class="propertyStore.dateRange.start ? 'text-black' : 'text-gray-400'">
+          <p class="text-sm" :class="propertyStore.dateRange.start ? 'text-black font-medium' : 'text-gray-400'">
             {{ propertyStore.formattedDateRange }}
           </p>
         </div>
@@ -56,8 +56,22 @@
 
       </div>
 
-      <div @click="$router.push('/dashboard')" class="p-2 border rounded-full hover:shadow-md transition cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      <div class="flex items-center gap-6">
+        <button @click="$router.push('/bookings')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
+          Reservas
+        </button>
+
+        <button @click="$router.push('/home')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
+          Dashboard
+        </button>
+
+        <span class="text-gray-600 font-medium">
+          {{ authStore.user?.name || "Usuario" }}
+        </span>
+
+        <button @click="handleLogout" class="bg-[#FF385C] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#d92d4c] transition">
+          Logout
+        </button>
       </div>
 
     </div>
@@ -68,10 +82,12 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePropertyStore } from "../stores/property";
+import { useAuthStore } from "../stores/auth"; // Asegúrate de que este es tu store de auth
 import { DatePicker } from 'v-calendar';
 import 'v-calendar/dist/style.css';
 
 const propertyStore = usePropertyStore();
+const authStore = useAuthStore();
 const router = useRouter();
 const activeMenu = ref(null);
 
@@ -95,6 +111,11 @@ onUnmounted(() => { window.removeEventListener('click', handleGlobalClick); });
 const selectCity = (city) => {
   propertyStore.setSearchQuery(city);
   activeMenu.value = null;
+};
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/');
 };
 
 const handleSearchClick = () => {
