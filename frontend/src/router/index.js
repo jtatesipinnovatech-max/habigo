@@ -10,30 +10,33 @@ const routes = [
     path: "/",
     component: AuthView,
   },
-
   {
     path: "/",
     component: MainLayout,
     meta: { requiresAuth: true },
-children: [
-  {
-    path: "home",
-    component: HomeView,
-  },
-  {
-    path: "property/:id",
-    component: PropertyDetailView,
-  },
-
-  {
-    path: "bookings",
-    component: () => import("../views/BookingsView.vue"),
-  },
-  {
-    path: "dashboard",
-    component: () => import("../views/DashboardView.vue"),
-  },
-]
+    children: [
+      {
+        path: "home",
+        component: HomeView,
+      },
+      {
+        path: "property/:id",
+        component: PropertyDetailView,
+      },
+      {
+        path: "search",
+        name: "search-results",
+        component: () => import("../views/SearchResultsView.vue"),
+      },
+      {
+        path: "bookings",
+        component: () => import("../views/BookingsView.vue"),
+      },
+      {
+        path: "dashboard",
+        component: () => import("../views/DashboardView.vue"),
+      },
+    ],
   },
 ];
 

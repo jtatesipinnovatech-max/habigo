@@ -13,8 +13,10 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "axios": "^1.13.6",
     "pinia": "^3.0.4",
+    "v-calendar": "^3.1.2",
     "vue": "beta",
     "vue-router": "^4.6.4"
   },
