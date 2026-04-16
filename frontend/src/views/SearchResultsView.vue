@@ -20,10 +20,14 @@
           />
         </div>
 
-        <div v-else class="flex flex-col items-center py-20 text-center">
-          <p class="text-xl text-gray-400 italic font-medium">
-            No se encontraron alojamientos para esta búsqueda.
-          </p>
+        <div v-if="propertyStore.filteredProperties.length === 0 && propertyStore.searchQuery"
+        class="flex flex-col items-center py-20 text-center">
+        <p class="text-xl text-gray-400 italic font-medium">
+        No se encontraron alojamientos para "{{ propertyStore.searchQuery }}"
+        </p>
+        </div>
+        <div v-if="!propertyStore.searchQuery" class="text-center text-gray-400 py-10">
+        Explora alojamientos disponibles en Colombia 🇨🇴
         </div>
       </section>
 

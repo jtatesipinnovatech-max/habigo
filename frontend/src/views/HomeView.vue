@@ -1,4 +1,11 @@
 <template>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+  <PropertyCard
+    v-for="p in propertyStore.properties"
+    :key="p.id"
+    :property="p"
+  />
+  </div>
   <div class="p-6">
     <div class="max-w-7xl mx-auto">
       <div v-if="propertyStore.filteredProperties.length === 0" class="text-center py-10">
@@ -15,7 +22,13 @@
   </div>
 </template>
 <script setup>
+import { onMounted } from 'vue';
 import { usePropertyStore } from '../stores/property';
-import PropertyCard from '../components/PropertyCard.vue';
+import PropertyCard from '../components/PropertyCard.vue'; 
+
 const propertyStore = usePropertyStore();
+
+onMounted(() => {
+  propertyStore.fetchProperties();
+});
 </script>

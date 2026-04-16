@@ -27,18 +27,19 @@ export const usePropertyStore = defineStore('property', {
   }),
 
   getters: {
-    filteredProperties: (state) => {
-      const normalize = (text) =>
-      text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  filteredProperties: (state) => {
+  if (!state.searchQuery) return state.properties;
 
-      const query = normalize(state.searchQuery);
-      if (!query) return state.properties;
+  const normalize = (text) =>
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-      return state.properties.filter(p => 
-      normalize(p.location).includes(query) ||
-      normalize(p.title).includes(query)
-      );
-    },
+  const query = normalize(state.searchQuery);
+
+  return state.properties.filter(p =>
+    normalize(p.location).includes(query) ||
+    normalize(p.title).includes(query)
+  );
+},
 
     totalGuests: (state) => {
       return state.guests.adultos + state.guests.ninos + state.guests.bebes;
@@ -74,7 +75,6 @@ actions: {
     }
   },
 
-  // 🔥 ESTA ES LA QUE FALTA
   async fetchProperties() {
     try {
       const data = await getProperties();

@@ -15,7 +15,7 @@ console.log("getMyProperties:", getMyProperties);
 const authMiddleware = require('../middlewares/authMiddleware');
 
 router.get('/', getProperties);
-//router.post('/', authMiddleware, createProperty);
+router.post('/', createProperty);
 //router.get('/my', authMiddleware, getMyProperties);
 
 module.exports = router;

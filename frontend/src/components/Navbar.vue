@@ -60,7 +60,9 @@
         <button @click="$router.push('/bookings')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
           Reservas
         </button>
-
+        <button @click="$router.push('/create-property')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
+          Crear
+        </button>
         <button @click="$router.push('/home')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
           Dashboard
         </button>
