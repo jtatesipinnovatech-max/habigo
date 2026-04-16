@@ -57,7 +57,21 @@ onMounted(() => {
   if (route.query.ninos !== undefined) propertyStore.guests.ninos = parseInt(route.query.ninos);
   if (route.query.bebes !== undefined) propertyStore.guests.bebes = parseInt(route.query.bebes);
   if (route.query.mascotas !== undefined) propertyStore.guests.mascotas = parseInt(route.query.mascotas);
+
+  propertyStore.fetchProperties();
+
 });
+
+onMounted(() => {
+  console.log("SE MONTÓ LA VISTA 🔥"); // 👈 agrega esto
+
+  if (route.query.q !== undefined) {
+    propertyStore.setSearchQuery(route.query.q);
+  }
+
+  propertyStore.fetchProperties();
+});
+
 </script>
 
 <style scoped>
