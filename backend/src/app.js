@@ -6,6 +6,12 @@ const app = express();
 const userRoutes = require('./routes/userRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+
+const propertyRoutes = require('./routes/propertyRoutes');
+
+console.log("TYPE:", typeof propertyRoutes);
+console.log("VALUE:", propertyRoutes);
 
 // Middlewares
 app.use(cors());
@@ -15,6 +21,8 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/properties', propertyRoutes);
 
 app.get('/', (req, res) => {
   res.send('HabiGo API funcionando 🚀');

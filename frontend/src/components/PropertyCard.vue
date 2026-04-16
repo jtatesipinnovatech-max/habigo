@@ -7,10 +7,11 @@
     <div class="relative overflow-hidden rounded-2xl">
       <img
         :src="property.image"
+        alt="property"
         class="w-full h-56 object-cover transition duration-300 group-hover:scale-105"
       />
 
-      <!-- FAVORITO (decorativo) -->
+      <!-- FAVORITO -->
       <div class="absolute top-3 right-3 bg-white/80 backdrop-blur p-1 rounded-full">
         ❤️
       </div>
@@ -33,8 +34,11 @@
         {{ property.title }}
       </p>
 
+      <!-- PRECIO -->
       <p class="mt-1">
-        <span class="font-semibold">${{ property.price }}</span>
+        <span class="font-semibold">
+          {{ formatPrice(property.price) }}
+        </span>
         <span class="text-gray-500 text-sm"> / noche</span>
       </p>
 
@@ -50,6 +54,15 @@ const props = defineProps({
 });
 
 const router = useRouter();
+
+// 🔥 FORMATEO DE PESO COLOMBIANO (PRO)
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(price);
+};
 
 const goToDetail = () => {
   router.push(`/property/${props.property.id}`);

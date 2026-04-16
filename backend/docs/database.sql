@@ -37,3 +37,9 @@ CREATE TABLE reviews (
   -- Un usuario solo puede reseñar una vez por booking
   UNIQUE (booking_id, user_id)
 );
+
+//Agregar estas columnas en la tabla properties.
+ALTER TABLE properties ADD COLUMN city TEXT;
+ALTER TABLE properties ADD COLUMN lat NUMERIC;
+ALTER TABLE properties ADD COLUMN lng NUMERIC;
+ALTER TABLE properties ADD COLUMN image TEXT;

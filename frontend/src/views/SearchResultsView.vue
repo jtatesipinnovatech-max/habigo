@@ -20,10 +20,14 @@
           />
         </div>
 
-        <div v-else class="flex flex-col items-center py-20 text-center">
-          <p class="text-xl text-gray-400 italic font-medium">
-            No se encontraron alojamientos para esta búsqueda.
-          </p>
+        <div v-if="propertyStore.filteredProperties.length === 0 && propertyStore.searchQuery"
+        class="flex flex-col items-center py-20 text-center">
+        <p class="text-xl text-gray-400 italic font-medium">
+        No se encontraron alojamientos para "{{ propertyStore.searchQuery }}"
+        </p>
+        </div>
+        <div v-if="!propertyStore.searchQuery" class="text-center text-gray-400 py-10">
+        Explora alojamientos disponibles en Colombia 🇨🇴
         </div>
       </section>
 
@@ -57,7 +61,21 @@ onMounted(() => {
   if (route.query.ninos !== undefined) propertyStore.guests.ninos = parseInt(route.query.ninos);
   if (route.query.bebes !== undefined) propertyStore.guests.bebes = parseInt(route.query.bebes);
   if (route.query.mascotas !== undefined) propertyStore.guests.mascotas = parseInt(route.query.mascotas);
+
+  propertyStore.fetchProperties();
+
 });
+
+onMounted(() => {
+  console.log("SE MONTÓ LA VISTA 🔥"); // 👈 agrega esto
+
+  if (route.query.q !== undefined) {
+    propertyStore.setSearchQuery(route.query.q);
+  }
+
+  propertyStore.fetchProperties();
+});
+
 </script>
 
 <style scoped>

@@ -4,6 +4,7 @@ import HomeView from "../views/HomeView.vue";
 import PropertyDetailView from "../views/PropertyDetailView.vue";
 import MainLayout from "../Layouts/MainLayout.vue";
 import { useAuthStore } from "../stores/auth";
+import CreatePropertyView from "../views/CreatePropertyView.vue";
 
 const routes = [
   {
@@ -36,6 +37,10 @@ const routes = [
         path: "dashboard",
         component: () => import("../views/DashboardView.vue"),
       },
+      {
+        path: "create-property",
+        component: CreatePropertyView,
+     },
     ],
   },
 ];
