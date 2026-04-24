@@ -10,11 +10,13 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
-// Crear usuario
-const createUser = async (email, password) => {
+// Crear usuario con role
+const createUser = async (email, password, role = 'guest') => {
   const result = await pool.query(
-    'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
-    [email, password]
+    `INSERT INTO users (email, password, role)
+     VALUES ($1, $2, $3)
+     RETURNING id, email, role`,
+    [email, password, role]
   );
 
   return result.rows[0];
