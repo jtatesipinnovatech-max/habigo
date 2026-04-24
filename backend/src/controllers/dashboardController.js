@@ -1,28 +1,28 @@
-const pool = require('../config/db');
+const DashboardModel = require('../models/dashboardModel');
 
 const getDashboard = async (req, res) => {
   const user_id = req.user.id;
 
   try {
-    const properties = await pool.query(
-      'SELECT COUNT(*) FROM properties WHERE user_id = $1',
-      [user_id]
-    );
+    const total_properties =
+      await DashboardModel.getTotalProperties(user_id);
 
-    const bookings = await pool.query(
-      'SELECT COUNT(*) FROM bookings WHERE user_id = $1',
-      [user_id]
-    );
+    const total_bookings =
+      await DashboardModel.getTotalBookings(user_id);
 
     res.json({
-      total_properties: Number(properties.rows[0].count),
-      total_bookings: Number(bookings.rows[0].count)
+      total_properties,
+      total_bookings
     });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error en dashboard' });
+    res.status(500).json({
+      error: 'Error en dashboard'
+    });
   }
 };
 
-module.exports = { getDashboard };
+module.exports = {
+  getDashboard
+};

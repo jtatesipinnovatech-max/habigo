@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getProperties } from "../services/properties"; 
+import { getProperties, createProperty } from "../services/properties";
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
@@ -14,32 +14,23 @@ export const usePropertyStore = defineStore('property', {
       bebes: 0,
       mascotas: 0
     },
-
-    // 🔴 BACKUP (por si algo falla)
-    /*
-    properties: [
-      { id: 1, title: "Apartamento moderno en el sur", location: "Cali", price: 120, rating: 4.8, image: "/Apartamento_sur.jpg" },
-    ],
-    */
-
-    // ✅ AHORA VIENE DEL BACKEND
     properties: [],
   }),
 
   getters: {
-  filteredProperties: (state) => {
-  if (!state.searchQuery) return state.properties;
+    filteredProperties: (state) => {
+      if (!state.searchQuery) return state.properties;
 
-  const normalize = (text) =>
-    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const normalize = (text) =>
+        text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-  const query = normalize(state.searchQuery);
+      const query = normalize(state.searchQuery);
 
-  return state.properties.filter(p =>
-    normalize(p.location).includes(query) ||
-    normalize(p.title).includes(query)
-  );
-},
+      return state.properties.filter(p =>
+        normalize(p.location).includes(query) ||
+        normalize(p.title).includes(query)
+      );
+    },
 
     totalGuests: (state) => {
       return state.guests.adultos + state.guests.ninos + state.guests.bebes;
@@ -63,36 +54,49 @@ export const usePropertyStore = defineStore('property', {
     }
   },
 
-actions: {
-  setSearchQuery(val) {
-    this.searchQuery = val;
-  },
+  actions: {
+    setSearchQuery(val) {
+      this.searchQuery = val;
+    },
 
-  updateGuests(type, amount) {
-    const newValue = this.guests[type] + amount;
-    if (newValue >= 0) {
-      this.guests[type] = newValue;
-    }
-  },
+    updateGuests(type, amount) {
+      const newValue = this.guests[type] + amount;
+      if (newValue >= 0) {
+        this.guests[type] = newValue;
+      }
+    },
 
-  async fetchProperties() {
-    try {
-      const data = await getProperties();
+    async fetchProperties() {
+      try {
+        const data = await getProperties();
+        console.log("DATA BACKEND:", data);
+        this.properties = data.map(p => ({
+          id: p.id,
+          title: p.title,
+          location: p.city,
+          price: p.price,
+          rating: 4.5,
+          image: p.image || "/default.jpg"
+        }));
+      } catch (error) {
+        console.error("Error cargando propiedades", error);
+      }
+    },
 
-      console.log("DATA BACKEND:", data);
-
-      this.properties = data.map(p => ({
-        id: p.id,
-        title: p.title,
-        location: p.city,
-        price: p.price,
-        rating: 4.5,
-        image: p.image || "/default.jpg"
-      }));
-
-    } catch (error) {
-      console.error("Error cargando propiedades", error);
+    // ── Nueva acción ──────────────────────────────────────────
+    async createProperty(propertyData) {
+      try {
+        const newProperty = await createProperty(propertyData);
+        // Refrescamos la lista para que aparezca la nueva propiedad
+        await this.fetchProperties();
+        return { success: true, data: newProperty };
+      } catch (error) {
+        console.error("Error creando propiedad:", error);
+        return {
+          success: false,
+          message: error.response?.data?.message || "Error al crear la propiedad"
+        };
+      }
     }
   }
-}
 });
