@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 console.log("CARGANDO PROPERTY ROUTES CORRECTO 🔥");
 
 const {
@@ -13,9 +14,28 @@ console.log("createProperty:", createProperty);
 console.log("getMyProperties:", getMyProperties);
 
 const authMiddleware = require('../middlewares/authMiddleware');
+const roleMiddleware = require('../middlewares/roleMiddleware');
 
+
+// Obtener propiedades públicas
 router.get('/', getProperties);
-router.post('/', createProperty);
-//router.get('/my', authMiddleware, getMyProperties);
+
+
+// Solo usuarios host pueden crear propiedades
+router.post(
+  '/',
+  authMiddleware,
+  roleMiddleware('host'),
+  createProperty
+);
+
+
+// Mis propiedades del usuario logueado
+router.get(
+  '/my',
+  authMiddleware,
+  getMyProperties
+);
+
 
 module.exports = router;
