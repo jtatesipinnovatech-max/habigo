@@ -21,23 +21,23 @@ export const usePropertyStore = defineStore('property', {
     filteredProperties: (state) => {
       if (!state.searchQuery) return state.properties;
 
-      const normalize = (text) =>
-        text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalize = (text) =>
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
       const query = normalize(state.searchQuery);
 
-      return state.properties.filter(p =>
-        normalize(p.location).includes(query) ||
-        normalize(p.title).includes(query)
-      );
-    },
+  return state.properties.filter(p =>
+    normalize(p.location).includes(query) ||
+    normalize(p.title).includes(query)
+  );
+},
 
     totalGuests: (state) => {
       return state.guests.adultos + state.guests.ninos + state.guests.bebes;
     },
 
     formattedDateRange: (state) => {
-      if (!state.dateRange || !state.dateRange.start || !state.dateRange.end)
+      if (!state.dateRange.start || !state.dateRange.end)
         return 'Agrega fechas';
 
       const start = new Date(state.dateRange.start).toLocaleDateString('es-ES', {
@@ -66,37 +66,24 @@ export const usePropertyStore = defineStore('property', {
       }
     },
 
-    async fetchProperties() {
-      try {
-        const data = await getProperties();
-        console.log("DATA BACKEND:", data);
-        this.properties = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          location: p.city,
-          price: p.price,
-          rating: 4.5,
-          image: p.image || "/default.jpg"
-        }));
-      } catch (error) {
-        console.error("Error cargando propiedades", error);
-      }
-    },
+  async fetchProperties() {
+    try {
+      const data = await getProperties();
 
-    // ── Nueva acción ──────────────────────────────────────────
-    async createProperty(propertyData) {
-      try {
-        const newProperty = await createProperty(propertyData);
-        // Refrescamos la lista para que aparezca la nueva propiedad
-        await this.fetchProperties();
-        return { success: true, data: newProperty };
-      } catch (error) {
-        console.error("Error creando propiedad:", error);
-        return {
-          success: false,
-          message: error.response?.data?.message || "Error al crear la propiedad"
-        };
-      }
+      console.log("DATA BACKEND:", data);
+
+      this.properties = data.map(p => ({
+        id: p.id,
+        title: p.title,
+        location: p.city,
+        price: p.price,
+        rating: 4.5,
+        image: p.image || "/default.jpg"
+      }));
+
+    } catch (error) {
+      console.error("Error cargando propiedades", error);
     }
   }
+}
 });

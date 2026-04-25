@@ -1,7 +1,8 @@
 <template>
   <div
-    @click="goToDetail"
     class="cursor-pointer group"
+    @mouseenter="onHover"
+    @click="handleClick"
   >
     <!-- IMAGEN -->
     <div class="relative overflow-hidden rounded-2xl">
@@ -48,6 +49,7 @@
 
 <script setup>
 import { useRouter } from "vue-router";
+import { inject } from "vue";
 
 const props = defineProps({
   property: Object,
@@ -55,7 +57,9 @@ const props = defineProps({
 
 const router = useRouter();
 
-// 🔥 FORMATEO DE PESO COLOMBIANO (PRO)
+const highlightMarker = inject("highlightMarker");
+const focusMarker = inject("focusMarker");
+
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -64,7 +68,12 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const goToDetail = () => {
+const onHover = () => {
+  highlightMarker?.(props.property.id);
+};
+
+const handleClick = () => {
+  focusMarker?.(props.property);
   router.push(`/property/${props.property.id}`);
 };
 </script>

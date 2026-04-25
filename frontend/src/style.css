@@ -30,3 +30,8 @@
   border: 1px solid #ddd;
   outline: none;
 }
+
+.map {
+  min-height: 500px;
+  width: 100%;
+}

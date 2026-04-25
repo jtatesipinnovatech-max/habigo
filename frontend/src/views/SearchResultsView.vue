@@ -2,83 +2,278 @@
   <div class="flex flex-col h-screen overflow-hidden">
     <main class="flex flex-1 overflow-hidden bg-white">
       
+      <!-- LISTA -->
       <section class="w-full lg:w-3/5 overflow-y-auto p-6 scrollbar-hide">
+        
+        <!-- TITULO -->
         <div class="mb-6">
           <p class="text-sm text-gray-500 mb-1">
             {{ propertyStore.filteredProperties.length }} alojamientos encontrados
           </p>
+
           <h1 class="text-2xl font-bold text-gray-900">
             Resultados en "{{ propertyStore.searchQuery || 'Todos los destinos' }}"
           </h1>
         </div>
 
-        <div v-if="propertyStore.filteredProperties.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <PropertyCard 
-            v-for="p in propertyStore.filteredProperties" 
-            :key="p.id" 
-            :property="p" 
+        <!-- TARJETAS -->
+        <div
+          v-if="propertyStore.filteredProperties.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 gap-8"
+        >
+          <PropertyCard
+            v-for="p in propertyStore.filteredProperties"
+            :key="p.id"
+            :property="p"
           />
         </div>
 
-        <div v-if="propertyStore.filteredProperties.length === 0 && propertyStore.searchQuery"
-        class="flex flex-col items-center py-20 text-center">
-        <p class="text-xl text-gray-400 italic font-medium">
-        No se encontraron alojamientos para "{{ propertyStore.searchQuery }}"
-        </p>
+        <!-- SIN RESULTADOS -->
+        <div
+          v-if="propertyStore.filteredProperties.length === 0 && propertyStore.searchQuery"
+          class="text-center py-10"
+        >
+          <p class="text-gray-500 text-xl">
+            No hay resultados para "{{ propertyStore.searchQuery }}"
+          </p>
         </div>
-        <div v-if="!propertyStore.searchQuery" class="text-center text-gray-400 py-10">
-        Explora alojamientos disponibles en Colombia 🇨🇴
-        </div>
+
       </section>
 
-      <section class="hidden lg:block lg:w-2/5 bg-gray-100 border-l relative">
-        <div class="h-full w-full flex flex-col items-center justify-center text-gray-400 p-10 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 20l-5.447-2.724A2 2 0 013 15.487V6.512a2 2 0 011.553-1.943L9 2V20zm0 0l6-3V3l-6 3m6 11l5.447 2.724A2 2 0 0021 18.513V9.512a2 2 0 00-1.553-1.943L15 6V18z" />
-          </svg>
-          <p class="font-bold text-lg text-gray-600">Mapa Interactivo</p>
-          <p class="text-sm">Ubicaciones para: {{ propertyStore.searchQuery || 'Colombia' }}</p>
-        </div>
+      <!-- MAPA -->
+      <section class="hidden lg:block lg:w-2/5 border-l">
+        <div id="map" style="width: 100%; height: 100vh;"></div>
       </section>
+
     </main>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, nextTick, watch, provide } from 'vue';
 import { useRoute } from 'vue-router';
-import PropertyCard from '../components/PropertyCard.vue';
 import { usePropertyStore } from '../stores/property';
+import PropertyCard from '../components/PropertyCard.vue';
 
 const propertyStore = usePropertyStore();
 const route = useRoute();
 
-onMounted(() => {
-  if (route.query.q !== undefined) {
+let map = null;
+let overlays = []; //
+
+const loadMap = () => {
+  if (!window.google) return;
+
+  const mapContainer = document.getElementById("map");
+  if (!mapContainer) return;
+
+  mapContainer.innerHTML = "";
+  overlays = [];
+
+  map = new google.maps.Map(mapContainer, {
+    center: { lat: 4.7110, lng: -74.0721 },
+    zoom: 12,
+  });
+
+  const geocoder = new google.maps.Geocoder();
+
+  if (propertyStore.searchQuery) {
+    geocoder.geocode(
+      { address: propertyStore.searchQuery },
+      (results, status) => {
+        if (status === "OK") {
+          map.setCenter(results[0].geometry.location);
+          map.setZoom(12);
+        }
+      }
+    );
+  }
+
+  const propsCiudad = propertyStore.filteredProperties.filter(p =>
+    p.city?.toLowerCase().includes(propertyStore.searchQuery?.toLowerCase())
+  );
+
+  propsCiudad.forEach((p) => {
+    if (p.lat && p.lng) {
+
+      const position = new google.maps.LatLng(
+        Number(p.lat),
+        Number(p.lng)
+      );
+
+      const overlay = new google.maps.OverlayView();
+
+      overlay.onAdd = function () {
+        const div = document.createElement("div");
+        div.className = "airbnb-marker";
+        div.innerHTML = `
+          <div class="marker-content">
+            $${new Intl.NumberFormat('es-CO').format(p.price)}
+          </div>
+        `;
+
+        div.dataset.id = p.id;
+
+        div.addEventListener("click", () => {
+          map.setCenter(position);
+          map.setZoom(15);
+
+          document.querySelectorAll(".airbnb-marker").forEach(el => {
+            el.classList.remove("active");
+          });
+          div.classList.add("active");
+        });
+
+        this.div = div;
+        const panes = this.getPanes();
+        panes.overlayMouseTarget.appendChild(div);
+      };
+
+      overlay.draw = function () {
+        const projection = this.getProjection();
+        const pos = projection.fromLatLngToDivPixel(position);
+
+        if (this.div) {
+          this.div.style.left = pos.x + "px";
+          this.div.style.top = pos.y + "px";
+        }
+      };
+
+      overlay.onRemove = function () {
+        if (this.div) {
+          this.div.remove();
+          this.div = null;
+        }
+      };
+
+      overlay.setMap(map);
+
+      overlay.__id = p.id;
+      overlays.push(overlay);
+    }
+  });
+
+  const bounds = new google.maps.LatLngBounds();
+
+  propsCiudad.forEach((p) => {
+    if (p.lat && p.lng) {
+      bounds.extend({
+        lat: Number(p.lat),
+        lng: Number(p.lng)
+      });
+    }
+  });
+
+  if (!bounds.isEmpty() && propsCiudad.length > 0) {
+    map.fitBounds(bounds);
+  }
+};
+
+const highlightMarker = (id) => {
+  overlays.forEach((o) => {
+    if (o.div) {
+      if (o.__id === id) {
+        o.div.classList.add("active");
+      } else {
+        o.div.classList.remove("active");
+      }
+    }
+  });
+};   
+
+const focusMarker = (p) => {
+  if (!map) return;
+
+  map.setCenter({
+    lat: Number(p.lat),
+    lng: Number(p.lng)
+  });
+
+  map.setZoom(15);
+};
+
+provide("highlightMarker", highlightMarker);
+provide("focusMarker", focusMarker);
+
+onMounted(async () => {
+  if (route.query.q) {
     propertyStore.setSearchQuery(route.query.q);
   }
-  if (route.query.adultos !== undefined) propertyStore.guests.adultos = parseInt(route.query.adultos);
-  if (route.query.ninos !== undefined) propertyStore.guests.ninos = parseInt(route.query.ninos);
-  if (route.query.bebes !== undefined) propertyStore.guests.bebes = parseInt(route.query.bebes);
-  if (route.query.mascotas !== undefined) propertyStore.guests.mascotas = parseInt(route.query.mascotas);
 
-  propertyStore.fetchProperties();
+  await propertyStore.fetchProperties();
+  await nextTick();
 
-});
+  if (!window.google) {
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyC06MTwnXuYgvRi-0cpVhUWpaYU9RW1t_o`;
+    script.async = true;
 
-onMounted(() => {
-  console.log("SE MONTÓ LA VISTA 🔥"); // 👈 agrega esto
-
-  if (route.query.q !== undefined) {
-    propertyStore.setSearchQuery(route.query.q);
+    script.onload = loadMap;
+    document.head.appendChild(script);
+  } else {
+    loadMap();
   }
-
-  propertyStore.fetchProperties();
 });
 
+watch(
+  () => propertyStore.searchQuery,
+  async () => {
+    await propertyStore.fetchProperties();
+    await nextTick();
+    loadMap();
+  }
+);
+
+defineExpose({
+  highlightMarker,
+  focusMarker
+});
 </script>
 
 <style scoped>
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.airbnb-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  z-index: 1;
+}
+
+.marker-content {
+  background: white;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #222;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  white-space: nowrap;
+}
+
+.marker-content::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+.airbnb-marker:hover {
+  transform: translate(-50%, -100%) scale(1.1);
+  z-index: 999;
+}
+
+.airbnb-marker.active .marker-content {
+  background: #000;
+  color: white;
+  border-color: #000;
+}
+
+.airbnb-marker.active .marker-content::after {
+  border-color: #000 transparent transparent transparent;
+}
 </style>
