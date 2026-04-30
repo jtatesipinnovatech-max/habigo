@@ -1,0 +1,44 @@
+[33m8a4db30[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmi-rama[m[33m)[m feat: integración Google Maps con filtros por ciudad
+[33mf60391e[m[33m ([m[1;31morigin/mi-rama[m[33m)[m :wqMerge branch 'Test' of https://github.com/jtatesipinnovatech-max/habigo into mi-rama
+[33mec31a3b[m[33m ([m[1;31morigin/Test[m[33m)[m merge_backemd_model2
+[33m2532803[m merge_backend_model
+[33me4ed436[m feat(auth): implementación de roles host/guest y autorización de propiedades
+[33m79740f8[m implementacion perfil anfitiron
+[33me720901[m refactor(backend): reorganización completa a arquitectura MVC
+[33mc1e53b2[m Merge branch 'Test' of https://github.com/jtatesipinnovatech-max/habigo into mi-rama
+[33md8b8161[m feat(properties): creación de propiedades desde frontend integrada con backend
+[33ma3267d8[m feat: integración completa de propiedades con backend y eliminación de datos mock
+[33m2be3098[m arreglo conflicto property.js
+[33m9333c06[m conflicto resuelto
+[33m32446d3[m feat: sistema de reseñas con rating y promedio por propiedad
+[33m036e51a[m implementacion de filtros de busqueda y boton logout
+[33m0822657[m implementacion de filtros de busqueda
+[33m95eac42[m mejoras de vista
+[33mc29b6e7[m Merge branch 'Test' of https://github.com/jtatesipinnovatech-max/habigo into Test
+[33m0220788[m base front pasarela de pago y alimentacion de base datos
+[33md833896[m fix: resolver conflictos de merge2
+[33m65931ba[m fix: resolver conflictos de merge
+[33m9a42f70[m Merge remote-tracking branch 'origin/mi-rama' into Test
+[33m09efe16[m guardando cambios en database.sql
+[33m8e9981e[m Conexion del Frontend con el Backend y mejoras visuales
+[33m5bad94f[m Merge remote-tracking branch 'origin/Test' into mi-rama
+[33m92d1399[m estructura inicial del frontend y navegación
+[33m7433c70[m Backend completo: auth, properties, bookings (CRUD), dashboard funcional
+[33m6f5c43a[m Merge branch 'recovery' into Test
+[33mbfa3719[m Bookings completos: create, get, delet + integración con auth
+[33mc4b3a26[m Configuración local de db.js con mis datos
+[33mdc0b3dc[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Conflicto resuelto
+[33m958979a[m Update integrantes.txt
+[33mee61850[m Agregue mi nombre - Juan Felipe Mur Lasso
+[33m9b75540[m Agregada documentación y configuración del proyecto
+[33m736cc31[m Remove node_modules and add gitignore
+[33md6475a7[m Backend completo con auth y properties
+[33m818da42[m primer commint para la lista integrantes
+[33m474b3d4[m frontend inicializado con Vue, Router y Pinia
+[33m3570489[m Update integrantes.txt
+[33m82b381e[m Update integrantes.txt
+[33m74a6f19[m 3 commit lista integrantes
+[33m2a3b831[m Merge branch 'main' of https://github.com/jtatesipinnovatech-max/habigo
+[33mc311834[m segundo commit lista integrantes
+[33m7363db1[m Agregué mi nombre - Emmanuel Ospina Giraldo
+[33m4f4490b[m primer commit para lista integrantes
