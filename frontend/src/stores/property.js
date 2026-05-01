@@ -15,22 +15,23 @@ export const usePropertyStore = defineStore('property', {
       mascotas: 0
     },
     properties: [],
+    loading: false,
   }),
 
   getters: {
     filteredProperties: (state) => {
       if (!state.searchQuery) return state.properties;
 
-  const normalize = (text) =>
-    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const normalize = (text) =>
+        text?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || '';
 
       const query = normalize(state.searchQuery);
 
-  return state.properties.filter(p =>
-    normalize(p.location).includes(query) ||
-    normalize(p.title).includes(query)
-  );
-},
+      return state.properties.filter(p =>
+        normalize(p.location).includes(query) ||
+        normalize(p.title).includes(query)
+      );
+    },
 
     totalGuests: (state) => {
       return state.guests.adultos + state.guests.ninos + state.guests.bebes;
@@ -66,24 +67,28 @@ export const usePropertyStore = defineStore('property', {
       }
     },
 
-  async fetchProperties() {
-    try {
-      const data = await getProperties();
+    async fetchProperties() {
+      try {
+        this.loading = true;
+        const data = await getProperties();
 
-      console.log("DATA BACKEND:", data);
+        this.properties = data.map(p => ({
+          id: p.id,
+          title: p.title,
+          description: p.description || '',
+          location: p.city,
+          price: p.price,
+          rating: 4.5,
+          image: p.image || "/default.jpg",
+          lat: p.lat,
+          lng: p.lng,
+        }));
 
-      this.properties = data.map(p => ({
-        id: p.id,
-        title: p.title,
-        location: p.city,
-        price: p.price,
-        rating: 4.5,
-        image: p.image || "/default.jpg"
-      }));
-
-    } catch (error) {
-      console.error("Error cargando propiedades", error);
+      } catch (error) {
+        console.error("Error cargando propiedades", error);
+      } finally {
+        this.loading = false;
+      }
     }
   }
-}
 });

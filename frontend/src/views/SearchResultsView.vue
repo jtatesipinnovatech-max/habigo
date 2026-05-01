@@ -60,7 +60,7 @@ const propertyStore = usePropertyStore();
 const route = useRoute();
 
 let map = null;
-let markers = []; // Ahora son L.Marker con divIcon
+let markers = [];
 
 const geocodeCity = async (cityName) => {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityName)}&format=json&limit=1`;
@@ -81,7 +81,7 @@ const createAirbnbIcon = (price, active = false) => {
   const borderColor = active ? '#000' : '#ddd';
 
   return L.divIcon({
-    className: '', 
+    className: '',
     html: `
       <div class="airbnb-marker ${active ? 'active' : ''}">
         <div class="marker-content" style="
@@ -93,23 +93,20 @@ const createAirbnbIcon = (price, active = false) => {
         </div>
       </div>
     `,
-    iconAnchor: [0, 0], // se maneja con CSS transform en .airbnb-marker
+    iconAnchor: [0, 0],
   });
 };
 
-// ─── Carga / recarga el mapa ──────────────────────────────────────────────────
 const loadMap = async () => {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
 
-  // Destruir instancia anterior si existe
   if (map) {
     map.remove();
     map = null;
   }
   markers = [];
 
-  // Inicializar mapa centrado en Colombia por defecto
   map = L.map('map', {
     center: [4.7110, -74.0721],
     zoom: 12,
@@ -121,12 +118,10 @@ const loadMap = async () => {
     maxZoom: 19,
   }).addTo(map);
 
-  // Filtrar propiedades que coincidan con la búsqueda actual
   const propsCiudad = propertyStore.filteredProperties.filter(p =>
     p.city?.toLowerCase().includes(propertyStore.searchQuery?.toLowerCase() || '')
   );
 
-  // Centrar mapa en la ciudad buscada
   if (propertyStore.searchQuery) {
     const coords = await geocodeCity(propertyStore.searchQuery);
     if (coords) {
@@ -136,12 +131,10 @@ const loadMap = async () => {
 
   const bounds = L.latLngBounds();
 
-  // Crear marcadores para cada propiedad usando Nominatim
   for (const p of propsCiudad) {
     const coords = await geocodeCity(p.city);
     if (!coords) continue;
 
-    // Pequeño offset aleatorio para que no se apilen si hay varias propiedades en la misma ciudad
     const jitter = () => (Math.random() - 0.5) * 0.01;
     const lat = coords.lat + jitter();
     const lng = coords.lng + jitter();
@@ -150,7 +143,6 @@ const loadMap = async () => {
       icon: createAirbnbIcon(p.price),
     }).addTo(map);
 
-    // Guardar id para highlight
     marker.__id = p.id;
 
     marker.on('click', () => {
@@ -161,7 +153,6 @@ const loadMap = async () => {
     bounds.extend([lat, lng]);
   }
 
-  // Ajustar vista a todos los marcadores
   if (markers.length > 0 && bounds.isValid()) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
@@ -198,7 +189,6 @@ onMounted(async () => {
   loadMap();
 });
 
-// Limpiar mapa al desmontar el componente
 onUnmounted(() => {
   if (map) {
     map.remove();
@@ -219,55 +209,7 @@ defineExpose({ highlightMarker, focusMarker });
 </script>
 
 <style scoped>
-/* El div#map necesita z-index base para que Leaflet funcione bien */
 #map {
   z-index: 0;
-}
-
-.airbnb-marker {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  cursor: pointer;
-  transition: transform 0.15s ease;
-  z-index: 1;
-}
-
-.marker-content {
-  background: white;
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 13px;
-  color: #222;
-  border: 1px solid #ddd;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-  position: relative;
-}
-
-.marker-content::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: white transparent transparent transparent;
-}
-
-.airbnb-marker:hover {
-  transform: translate(-50%, -100%) scale(1.1);
-  z-index: 999;
-}
-
-.airbnb-marker.active .marker-content {
-  background: #000;
-  color: white;
-  border-color: #000;
-}
-
-.airbnb-marker.active .marker-content::after {
-  border-color: #000 transparent transparent transparent;
 }
 </style>

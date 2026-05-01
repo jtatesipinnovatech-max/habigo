@@ -35,3 +35,50 @@
   min-height: 500px;
   width: 100%;
 }
+
+.airbnb-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  z-index: 1;
+}
+
+.marker-content {
+  background: white;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #222;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  position: relative;
+}
+
+.marker-content::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+.airbnb-marker:hover {
+  transform: translate(-50%, -100%) scale(1.1);
+  z-index: 999;
+}
+
+.airbnb-marker.active .marker-content {
+  background: #000;
+  color: white;
+  border-color: #000;
+}
+
+.airbnb-marker.active .marker-content::after {
+  border-color: #000 transparent transparent transparent;
+}

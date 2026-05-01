@@ -4,7 +4,7 @@
       
       <div class="flex items-center gap-2 cursor-pointer" @click="$router.push('/home')">
         <img src="/logo.png" class="h-8" alt="Logo" />
-        <h1 class="text-xl font-bold text-[#FF385C]">HabiGo</h1>
+        <h1 class="text-xl font-bold text-[#0d9488]">HabiGo</h1>
       </div>
 
       <div class="flex border rounded-full shadow-sm items-center bg-white relative">
@@ -26,7 +26,7 @@
             <p class="text-[10px] font-bold uppercase text-black">Quién</p>
             <p class="text-sm text-gray-400">{{ propertyStore.totalGuests > 0 ? propertyStore.totalGuests + ' huéspedes' : '¿Cuántos?' }}</p>
           </div>
-          <div @click.stop="handleSearchClick" class="bg-[#FF385C] p-2 rounded-full text-white hover:scale-105 transition">
+          <div @click.stop="handleSearchClick" class="bg-[#0d9488] p-2 rounded-full text-white hover:scale-105 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           </div>
         </div>
@@ -40,7 +40,7 @@
         </div>
 
         <div v-if="activeMenu === 'dates'" class="absolute top-16 left-1/2 -translate-x-1/2 bg-white shadow-2xl border rounded-3xl p-6 z-[100]" @click.stop>
-          <DatePicker v-model.range="propertyStore.dateRange" :columns="2" color="pink" />
+          <DatePicker v-model.range="propertyStore.dateRange" :columns="2" color="teal" />
         </div>
 
         <div v-if="activeMenu === 'who'" class="absolute top-16 right-0 bg-white shadow-2xl border rounded-3xl p-6 w-80 z-[100]">
@@ -57,21 +57,13 @@
       </div>
 
       <div class="flex items-center gap-6">
-        <button @click="$router.push('/bookings')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
+        <button @click="$router.push('/bookings')" class="text-gray-700 hover:text-[#0d9488] font-medium transition">
           Reservas
         </button>
-        <button @click="$router.push('/create-property')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
+        <button @click="$router.push('/create-property')" class="text-gray-700 hover:text-[#0d9488] font-medium transition">
           Crear
         </button>
-        <button @click="$router.push('/home')" class="text-gray-700 hover:text-[#FF385C] font-medium transition">
-          Dashboard
-        </button>
-
-        <span class="text-gray-600 font-medium">
-          {{ authStore.user?.name || "Usuario" }}
-        </span>
-
-        <button @click="handleLogout" class="bg-[#FF385C] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#d92d4c] transition">
+        <button @click="handleLogout" class="bg-[#0d9488] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#0f766e] transition">
           Logout
         </button>
       </div>
@@ -84,7 +76,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePropertyStore } from "../stores/property";
-import { useAuthStore } from "../stores/auth"; // Asegúrate de que este es tu store de auth
+import { useAuthStore } from "../stores/auth";
 import { DatePicker } from 'v-calendar';
 import 'v-calendar/dist/style.css';
 
