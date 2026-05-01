@@ -6,7 +6,9 @@ console.log("CARGANDO PROPERTY ROUTES CORRECTO 🔥");
 const {
   getProperties,
   createProperty,
-  getMyProperties
+  getMyProperties,
+  updateProperty,
+  deleteProperty
 } = require('../controllers/propertyController');
 
 console.log("getProperties:", getProperties);
@@ -35,6 +37,20 @@ router.get(
   '/my',
   authMiddleware,
   getMyProperties
+);
+
+router.put(
+  '/:id',
+  authMiddleware,
+  roleMiddleware('host'),
+  updateProperty
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  roleMiddleware('host'),
+  deleteProperty
 );
 
 

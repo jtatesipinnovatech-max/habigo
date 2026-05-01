@@ -45,9 +45,37 @@ const getPropertiesByUser = async (user_id) => {
 
   return result.rows;
 };
+// Actualizar propiedad
+const updateProperty = async (id, user_id, data) => {
+  const { title, description, city, price, lat, lng, image } = data;
+
+  const result = await pool.query(
+    `UPDATE properties
+     SET title=$1, description=$2, city=$3, price=$4, lat=$5, lng=$6, image=$7
+     WHERE id=$8 AND user_id=$9
+     RETURNING *`,
+    [title, description, city, price, lat, lng, image, id, user_id]
+  );
+
+  return result.rows[0];
+};
+
+// Eliminar propiedad
+const deleteProperty = async (id, user_id) => {
+  const result = await pool.query(
+    `DELETE FROM properties
+     WHERE id=$1 AND user_id=$2
+     RETURNING *`,
+    [id, user_id]
+  );
+
+  return result.rows[0];
+};
 
 module.exports = {
   getAllProperties,
   createProperty,
-  getPropertiesByUser
+  getPropertiesByUser,
+  updateProperty,
+  deleteProperty
 };

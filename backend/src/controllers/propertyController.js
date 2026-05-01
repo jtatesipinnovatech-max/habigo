@@ -16,7 +16,7 @@ const createProperty = async (req, res) => {
   try {
     const property = await PropertyModel.createProperty({
       ...req.body,
-      user_id: 1 // temporal
+      user_id: req.user.id
     });
 
     res.json(property);
@@ -37,8 +37,67 @@ const getMyProperties = async (req, res) => {
   }
 };
 
+// Editar propiedad
+const updateProperty = async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.user.id;
+
+  try {
+    const updated = await PropertyModel.updateProperty(
+      id,
+      user_id,
+      req.body
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: 'Propiedad no encontrada o no es tuya'
+      });
+    }
+
+    res.json(updated);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error actualizando propiedad'
+    });
+  }
+};
+
+// Eliminar propiedad
+const deleteProperty = async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.user.id;
+
+  try {
+    const deleted = await PropertyModel.deleteProperty(
+      id,
+      user_id
+    );
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: 'Propiedad no encontrada o no es tuya'
+      });
+    }
+
+    res.json({
+      message: 'Propiedad eliminada '
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error eliminando propiedad'
+    });
+  }
+};
+
 module.exports = {
   getProperties,
   createProperty,
-  getMyProperties
+  getMyProperties,
+  updateProperty,
+  deleteProperty
 };
