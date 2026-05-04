@@ -24,8 +24,11 @@
       <!-- REGISTER -->
       <form v-else @submit.prevent="handleRegister">
         <input v-model="email" class="input mb-3" placeholder="Email" />
+
+        <input v-model="name" class="input mb-3" placeholder="Nombre completo" />
+
         <input v-model="password" type="password" class="input mb-3" placeholder="Contraseña" />
-        <input v-model="name" class="input mb-3" placeholder="Nombre" />
+
         <input v-model="confirmPassword" type="password" class="input mb-4" placeholder="Confirmar contraseña" />
 
         <button type="submit" class="btn-primary w-full py-3">
@@ -51,49 +54,103 @@ const router = useRouter();
 const route = useRoute();
 const auth = useAuthStore();
 
+// 📌 STATE
 const email = ref("");
 const password = ref("");
 const name = ref("");
 const confirmPassword = ref("");
 const isLogin = ref(true);
 
-// 🔥 CAPTURAR ROLE (clave)
+// 🔥 ROLE (por si usas host/guest)
 const role = route.query.role || "guest";
 
+// 📧 VALIDAR EMAIL
+const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+// =========================
+// 🔐 LOGIN
+// =========================
 const handleLogin = async () => {
+
+  // ❗ VALIDACIONES
+  if (!email.value || !password.value) {
+    alert("Email y contraseña son obligatorios");
+    return;
+  }
+
+  if (!isValidEmail(email.value)) {
+    alert("Correo inválido");
+    return;
+  }
+
   try {
     await auth.login({
       email: email.value,
       password: password.value,
     });
-    
+
     const redirect = route.query.redirect || "/";
     router.push(redirect);
 
   } catch (error) {
-    alert("Error en login");
+    alert(error.response?.data?.message || "Credenciales incorrectas");
   }
 };
 
+
+// =========================
+// 📝 REGISTER
+// =========================
 const handleRegister = async () => {
+
+  // ❗ CAMPOS OBLIGATORIOS
+  if (!email.value || !name.value || !password.value || !confirmPassword.value) {
+    alert("Todos los campos son obligatorios");
+    return;
+  }
+
+  // ❗ EMAIL
+  if (!isValidEmail(email.value)) {
+    alert("Correo inválido");
+    return;
+  }
+
+  // ❗ PASSWORD LARGO
+  if (password.value.length < 6) {
+    alert("La contraseña debe tener mínimo 6 caracteres");
+    return;
+  }
+
+  // ❗ PASSWORD MATCH
   if (password.value !== confirmPassword.value) {
     alert("Las contraseñas no coinciden");
     return;
   }
 
   try {
-    await auth.register({
-      email: email.value,
-      password: password.value,
-      name: name.value,
-    }, role); // 🔥 AQUÍ VA EL ROLE
+    await auth.register(
+      {
+        email: email.value,
+        password: password.value,
+        name: name.value,
+      },
+      role
+    );
 
-    alert("Usuario creado");
+    alert("Usuario creado correctamente");
+
+    // limpiar campos
+    email.value = "";
+    password.value = "";
+    name.value = "";
+    confirmPassword.value = "";
 
     isLogin.value = true;
 
   } catch (error) {
-    alert("Error en registro");
+    alert(error.response?.data?.message || "Error en registro");
   }
 };
 </script>

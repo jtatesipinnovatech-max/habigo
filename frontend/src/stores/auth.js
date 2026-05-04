@@ -9,20 +9,30 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   actions: {
-    async login(data) {
-      try {
-        const res = await api.post("/users/login", data);
+      async login(data) {
+        try {
+          const res = await api.post("/users/login", data);
 
-        this.token = res.data.token;
-        this.user = res.data.user;
-        this.isAuthenticated = true;
+          this.token = res.data.token;
+          this.user = res.data.user;
+          this.isAuthenticated = true;
 
-        localStorage.setItem("token", this.token);
-      } catch (error) {
-        console.error(error.response?.data);
-        alert(error.response?.data?.message || "Error en login");
-      }
-    }, // 🔥 IMPORTANTE coma aquí
+          localStorage.setItem("token", this.token);
+
+          return true; 
+
+        } catch (error) {
+          console.error(error.response?.data);
+
+          this.token = null;
+          this.user = null;
+          this.isAuthenticated = false;
+
+          localStorage.removeItem("token");
+
+          throw error; 
+        }
+    },
 
     async register(data, role = "guest") {
       try {
@@ -36,7 +46,7 @@ export const useAuthStore = defineStore("auth", {
         console.error(error.response?.data);
         alert(error.response?.data?.message || "Error en registro");
       }
-    }, // coma aquí también
+    }, 
 
     logout() {
       this.user = null;

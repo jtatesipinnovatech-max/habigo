@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { createBooking, getMyBookings, deleteBooking, checkAvailability  } = require('../controllers/bookingController');
+const { createBooking, getMyBookings, deleteBooking, checkAvailability, getBookingsByProperty } = require('../controllers/bookingController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 router.get("/by-property", getBookingsByProperty);

@@ -49,10 +49,19 @@ const getBookingsByUser = async (user_id) => {
 
   return result.rows;
 };
+const getBookingsByProperty = async (property_id) => {
+  const result = await pool.query(
+    "SELECT start_date, end_date FROM bookings WHERE property_id = $1",
+    [property_id]
+  );
+
+  return result.rows;
+};
 
 module.exports = {
-  checkBookingConflict,
   createBooking,
   deleteBooking,
-  getBookingsByUser
+  getBookingsByUser,
+  checkBookingConflict,
+  getBookingsByProperty 
 };

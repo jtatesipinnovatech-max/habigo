@@ -3,30 +3,63 @@ const jwt = require('jsonwebtoken');
 
 const UserModel = require('../models/userModel');
 
-// REGISTER
+// ===============================
+// 📧 VALIDADOR EMAIL
+// ===============================
+const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+// ===============================
+// 📝 REGISTER
+// ===============================
 const register = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, name } = req.body;
 
   try {
+    // 🔴 CAMPOS OBLIGATORIOS
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        message: 'Todos los campos son obligatorios'
+      });
+    }
+
+    // 🔴 EMAIL VÁLIDO
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        message: 'Correo inválido'
+      });
+    }
+
+    // 🔴 PASSWORD SEGURA
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: 'La contraseña debe tener mínimo 6 caracteres'
+      });
+    }
+
+    // 🔍 USUARIO EXISTENTE
     const existingUser = await UserModel.findUserByEmail(email);
 
     if (existingUser) {
       return res.status(400).json({
-        message: 'El usuario ya existe'
+        message: 'El correo ya está registrado'
       });
     }
 
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
+    // 🔐 HASH PASSWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 👤 CREAR USUARIO
     const user = await UserModel.createUser(
       email,
       hashedPassword,
-      role || 'guest'
+      role || 'guest',
+      name
     );
 
     res.json({
-      message: 'Usuario registrado 🔥',
+      message: 'Usuario registrado correctamente',
       user
     });
 
@@ -38,36 +71,53 @@ const register = async (req, res) => {
   }
 };
 
-// LOGIN
+// ===============================
+// 🔐 LOGIN
+// ===============================
 const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user =
-      await UserModel.findUserByEmail(email);
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'Usuario no encontrado'
+    // 🔴 CAMPOS OBLIGATORIOS
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Email y contraseña son obligatorios'
       });
     }
 
-    const valid =
-      await bcrypt.compare(password, user.password);
+    // 🔴 EMAIL VÁLIDO
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        message: 'Correo inválido'
+      });
+    }
+
+    const user = await UserModel.findUserByEmail(email);
+
+    // 🔴 NO EXISTE
+    if (!user) {
+      return res.status(401).json({
+        message: 'Credenciales incorrectas'
+      });
+    }
+
+    // 🔐 VALIDAR PASSWORD
+    const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
       return res.status(401).json({
-        message: 'Contraseña incorrecta'
+        message: 'Credenciales incorrectas'
       });
     }
 
+    // 🔑 TOKEN (usar .env)
     const token = jwt.sign(
       {
         id: user.id,
         role: user.role
       },
-      'secreto',
-      { expiresIn: '1h' }
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
     );
 
     res.json({
@@ -75,7 +125,8 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        name: user.name
       }
     });
 

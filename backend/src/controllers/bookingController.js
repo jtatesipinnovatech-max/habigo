@@ -75,6 +75,19 @@ const deleteBooking = async (req, res) => {
     });
   }
 };
+//bloqueo de fechas ocupadas para el calendario.
+const getBookingsByProperty = async (req, res) => {
+  const { property_id } = req.query;
+
+  try {
+    const data = await BookingModel.getBookingsByProperty(property_id);
+    res.json(data);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo reservas" });
+  }
+};
 
 // Mis reservas
 const getMyBookings = async (req, res) => {
@@ -124,5 +137,6 @@ module.exports = {
   createBooking,
   deleteBooking,
   getMyBookings,
-  checkAvailability
+  checkAvailability,
+  getBookingsByProperty 
 };
