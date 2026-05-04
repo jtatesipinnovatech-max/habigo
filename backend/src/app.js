@@ -13,6 +13,8 @@ const propertyRoutes = require('./routes/propertyRoutes');
 console.log("TYPE:", typeof propertyRoutes);
 console.log("VALUE:", propertyRoutes);
 
+require("dotenv").config();
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
