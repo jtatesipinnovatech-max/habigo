@@ -22,6 +22,7 @@ export const useBookingStore = defineStore("booking", {
     },
 
     async createBooking(data) {
+      console.log("📦 FRONT ENVÍA:", data);
       try {
         await api.post("/bookings", data);
       } catch (err) {

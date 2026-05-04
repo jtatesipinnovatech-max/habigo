@@ -14,7 +14,7 @@ export const useAuthStore = defineStore("auth", {
         const res = await api.post("/users/login", data);
 
         this.token = res.data.token;
-        this.user = { email: data.email };
+        this.user = res.data.user;
         this.isAuthenticated = true;
 
         localStorage.setItem("token", this.token);
@@ -22,13 +22,27 @@ export const useAuthStore = defineStore("auth", {
         console.error(error.response?.data);
         alert(error.response?.data?.message || "Error en login");
       }
-    },
+    }, // 🔥 IMPORTANTE coma aquí
+
+    async register(data, role = "guest") {
+      try {
+        await api.post("/users/register", {
+          ...data,
+          role
+        });
+
+        alert("Usuario registrado 🔥");
+      } catch (error) {
+        console.error(error.response?.data);
+        alert(error.response?.data?.message || "Error en registro");
+      }
+    }, // coma aquí también
 
     logout() {
       this.user = null;
       this.token = null;
       this.isAuthenticated = false;
       localStorage.removeItem("token");
-    },
-  },
+    }
+  }
 });

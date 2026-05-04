@@ -4,6 +4,14 @@ const BookingModel = require('../models/bookingModel');
 const createBooking = async (req, res) => {
   const { property_id, start_date, end_date } = req.body;
   const user_id = req.user.id;
+  console.log("🔥 BODY:", req.body);
+  console.log("🔥 USER:", req.user);
+
+  if (!property_id) {
+  return res.status(400).json({
+    message: 'Propiedad requerida'
+  });
+}
 
   try {
     if (!start_date || !end_date) {
@@ -30,7 +38,7 @@ const createBooking = async (req, res) => {
     );
 
     res.json({
-      message: 'Reserva creada 🔥',
+      message: 'Reserva creada ',
       booking
     });
 
@@ -84,8 +92,37 @@ const getMyBookings = async (req, res) => {
   }
 };
 
+const checkAvailability = async (req, res) => {
+  const { property_id, start_date, end_date } = req.query;
+
+  try {
+    if (!property_id || !start_date || !end_date) {
+      return res.status(400).json({
+        message: 'Faltan datos'
+      });
+    }
+
+    const conflict = await BookingModel.checkBookingConflict(
+      property_id,
+      start_date,
+      end_date
+    );
+
+    res.json({
+      available: conflict.length === 0
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error verificando disponibilidad'
+    });
+  }
+};
+
 module.exports = {
   createBooking,
   deleteBooking,
-  getMyBookings
+  getMyBookings,
+  checkAvailability
 };

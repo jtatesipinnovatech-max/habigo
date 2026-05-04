@@ -11,6 +11,6 @@ export const createProperty = async (propertyData) => {
 };
 
 export const getMyProperties = async () => {
-  const res = await api.get("/properties/mine");
+  const res = await api.get("/properties/my");
   return res.data;
 };

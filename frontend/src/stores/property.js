@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getProperties, createProperty } from "../services/properties";
+import api from "../services/api";
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
@@ -67,6 +68,29 @@ export const usePropertyStore = defineStore('property', {
       }
     },
 
+    async createProperty(data) {
+    try {
+     const res = await api.post("/properties", data, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+     });
+
+      return {
+      success: true,
+      data: res.data
+      };
+
+      } catch (error) {
+      console.error("Error creando propiedad:", error.response?.data || error);
+
+     return {
+        success: false,
+        message: "Error creando propiedad"
+      };
+    }
+  },
+
     async fetchProperties() {
       try {
         this.loading = true;
@@ -77,11 +101,10 @@ export const usePropertyStore = defineStore('property', {
           title: p.title,
           description: p.description || '',
           location: p.city,
-          price: p.price,
+          address: p.address,
+          price: Number(p.price),
           rating: 4.5,
           image: p.image || "/default.jpg",
-          lat: p.lat,
-          lng: p.lng,
         }));
 
       } catch (error) {

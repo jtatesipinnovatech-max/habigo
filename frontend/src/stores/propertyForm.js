@@ -11,8 +11,7 @@ export const usePropertyFormStore = defineStore('propertyForm', {
       description: '',
       price: null,
       city: '',
-      lat: null,
-      lng: null,
+      address: '',
       image: '',
     },
 
@@ -37,8 +36,7 @@ export const usePropertyFormStore = defineStore('propertyForm', {
       description: state.form.description.trim(),
       price:       Number(state.form.price),
       city:        state.form.city.trim(),
-      lat:         state.form.lat  ? Number(state.form.lat)  : null,
-      lng:         state.form.lng  ? Number(state.form.lng)  : null,
+      address:     state.form.address.trim(),
       image:       state.form.image.trim() || '/images/default.jpg',
     }),
   },
@@ -64,7 +62,7 @@ export const usePropertyFormStore = defineStore('propertyForm', {
       this.currentStep = 1;
       this.form = {
         title: '', description: '', price: null,
-        city: '', lat: null, lng: null, image: '',
+        city: '', address: '', image: '',
       };
       this.spaceType  = '';
       this.amenities  = [];

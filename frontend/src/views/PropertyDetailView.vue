@@ -68,25 +68,55 @@
               <span class="text-2xl font-bold">{{ formatPrice(property?.price) }}</span>
               <span class="text-gray-500">/ noche</span>
             </div>
-
+                <p class="text-sm text-gray-500 mb-4">
+                Máximo {{ property?.max_guests || 1 }} huéspedes
+              </p>
             <!-- FECHAS Y HUÉSPEDES -->
-            <div class="border rounded-xl overflow-hidden mb-4">
-              <div class="grid grid-cols-2">
-                <div class="p-3 border-r border-b">
-                  <p class="text-[10px] font-bold uppercase">Llegada</p>
-                  <p class="text-sm text-gray-500">Agrega fecha</p>
-                </div>
-                <div class="p-3 border-b">
-                  <p class="text-[10px] font-bold uppercase">Salida</p>
-                  <p class="text-sm text-gray-500">Agrega fecha</p>
-                </div>
+          <div class="border rounded-xl overflow-hidden mb-4">
+            <div class="grid grid-cols-2">
+
+              <div class="p-3 border-r border-b">
+                <p class="text-[10px] font-bold uppercase">Llegada</p>
+                <input
+                  type="date"
+                  :min="today"
+                  v-model="propertyStore.dateRange.start"
+                  class="text-sm text-gray-700 w-full"
+                />
               </div>
-              <div class="p-3">
-                <p class="text-[10px] font-bold uppercase">Huéspedes</p>
-                <p class="text-sm text-gray-500">1 huésped</p>
+
+              <div class="p-3 border-b">
+                <p class="text-[10px] font-bold uppercase">Salida</p>
+                <input
+                  type="date"
+                  :min="propertyStore.dateRange.start || today"
+                  v-model="propertyStore.dateRange.end"
+                  class="text-sm text-gray-700 w-full"
+                />
               </div>
+
             </div>
 
+            <div class="p-3">
+              <p class="text-[10px] font-bold uppercase">Huéspedes</p>
+              <input
+                type="number"
+                min="1"
+                :max="property?.max_guests || 1"
+                v-model.number="propertyStore.guests.adultos"
+                class="text-sm text-gray-700 w-full"
+              />
+              <p class="text-xs text-gray-500 mt-1">
+                Esta propiedad permite hasta {{ property?.max_guests }} huéspedes
+              </p>
+              <p 
+                v-if="propertyStore.guests.adultos >= property?.max_guests"
+                class="text-xs text-red-500 mt-1"
+              >
+                Límite de huéspedes alcanzado
+              </p>
+            </div>
+          </div>
             <!-- BOTÓN RESERVAR -->
             <button
               @click="book"
@@ -98,17 +128,19 @@
             <!-- DESGLOSE DE PRECIO -->
             <div class="mt-4 space-y-2 text-sm text-gray-600">
               <div class="flex justify-between">
-                <span>{{ formatPrice(property?.price) }} x 1 noche</span>
-                <span>{{ formatPrice(property?.price) }}</span>
+                <span>{{ formatPrice(property?.price) }} x {{ nights }} noche(s)</span>
+                <span>{{ formatPrice(totalPrice) }}</span>
               </div>
+
               <div class="flex justify-between">
                 <span>Tarifa de servicio</span>
-                <span>{{ formatPrice(Math.round(property?.price * 0.12)) }}</span>
+                <span>{{ formatPrice(Math.round(totalPrice * 0.12)) }}</span>
               </div>
+
               <div class="flex justify-between font-bold text-gray-900 border-t pt-2 mt-2">
                 <span>Total</span>
-                <span>{{ formatPrice(Math.round(property?.price * 1.12)) }}</span>
-              </div>
+                <span>{{ formatPrice(Math.round(totalPrice * 1.12)) }}</span>
+            </div>
             </div>
 
           </div>
@@ -120,7 +152,7 @@
     <!-- MODAL DE PAGO -->
     <PaymentModal
       v-if="showPayment"
-      :total="property?.price"
+      :total="totalPrice"
       :propertyId="property?.id"
       @close="showPayment = false"
       @success="handleSuccess"
@@ -131,27 +163,62 @@
 
 <script setup>
 import { ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { computed } from "vue";
+
 import { usePropertyStore } from "../stores/property";
+import { useAuthStore } from "../stores/auth";
 import { useBookingStore } from "../stores/booking";
+
+import { onMounted } from "vue";
+
+onMounted(async () => {
+  try {
+    const res = await api.get("/bookings/by-property", {
+      params: {
+        property_id: property.id
+      }
+    });
+
+    disabledDates.value = res.data;
+
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+import api from "../services/api";
 import PaymentModal from "../components/PaymentModal.vue";
+
 import {
   ArrowLeft, Star, MapPin,
   Wifi, Wind, Tv, Car, UtensilsCrossed,
   WashingMachine, Waves, Shield
 } from "lucide-vue-next";
 
+const today = new Date().toISOString().split("T")[0];
+// ROUTER
+const router = useRouter();
 const route = useRoute();
-const store = usePropertyStore();
-const bookingStore = useBookingStore();
+const disabledDates = ref([]);
 
-const property = store.properties.find(
+// STORES
+const propertyStore = usePropertyStore();
+const bookingStore = useBookingStore();
+const auth = useAuthStore();
+
+// PROPERTY
+const property = propertyStore.properties.find(
   (p) => p.id === Number(route.params.id)
 );
 
-const imgSrc = ref(property?.image || '/default.jpg');
+// IMAGE
+const imgSrc = ref(property?.image?.[0] || '/default.jpg');
+
+// MODAL
 const showPayment = ref(false);
 
+// AMENITIES
 const amenities = [
   { icon: Wifi,            label: 'Wifi' },
   { icon: Wind,            label: 'Aire acondicionado' },
@@ -163,6 +230,7 @@ const amenities = [
   { icon: Shield,          label: 'Seguridad 24h' },
 ];
 
+// PRICE FORMAT
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -171,16 +239,128 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const book = () => {
-  showPayment.value = true;
+
+//  RESERVAR (FLUJO REAL)
+const book = async () => {
+
+  const start = new Date(propertyStore.dateRange.start);
+  const end = new Date(propertyStore.dateRange.end);
+  const maxGuests = property?.max_guests || 1;
+  const isDateBlocked = (start, end) => {
+  return disabledDates.value.some(b => {
+    return (
+      (start <= b.end_date && end >= b.start_date)
+      );
+    });
+  };
+
+  const startDateObj = new Date(propertyStore.dateRange.start);
+  const endDateObj = new Date(propertyStore.dateRange.end);
+
+  if (isDateBlocked(startDateObj, endDateObj)) {
+   alert("Estas fechas ya están reservadas");
+   return;
+  }
+
+  if (propertyStore.guests.adultos < 1) {
+  alert("Debe haber al menos 1 huésped");
+  return;
+  }
+
+  if (end <= start) {
+    alert("La fecha de salida debe ser posterior a la de llegada");
+    return;
+  }
+
+  if (propertyStore.guests.adultos > maxGuests) {
+    alert(`Máximo ${maxGuests} huéspedes`);
+    return;
+  }
+
+  // 🔐 1. NO LOGUEADO
+  if (!auth.isAuthenticated) {
+    router.push({
+      path: "/auth",
+      query: {
+        redirect: route.fullPath
+      }
+    });
+    return; // 🔥 ESTO FALTABA
+  }
+
+  // 📅 2. VALIDAR FECHAS
+  if (!propertyStore.dateRange.start || !propertyStore.dateRange.end) {
+    alert("Selecciona fechas primero");
+    return;
+  }
+
+  try {
+    // 🔎 3. VALIDAR DISPONIBILIDAD
+    const res = await api.get("/bookings/check-availability", {
+      params: {
+        property_id: property.id,
+        start_date: propertyStore.dateRange.start,
+        end_date: propertyStore.dateRange.end
+      }
+    });
+    const maxGuests = property?.max_guests || 1;
+
+    if (propertyStore.guests.adultos < 1) {
+      alert("Debe haber al menos 1 huésped");
+      return;
+    }
+    
+    if (propertyStore.guests.adultos > maxGuests) {
+      alert(`Máximo ${maxGuests} huéspedes`);
+      return;
+    }
+
+    if (!res.data.available) {
+      alert("No disponible en esas fechas");
+      return;
+    }
+
+    // 💳 4. ABRIR MODAL
+    showPayment.value = true;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error validando disponibilidad");
+  }
 };
 
-const handleSuccess = async () => {
-  await bookingStore.createBooking({
-    propertyId: property.id,
-    date: new Date(),
+// CÁLCULO DE NOCHES Y PRECIO TOTAL
+  const nights = computed(() => {
+    if (!propertyStore.dateRange.start || !propertyStore.dateRange.end) return 1;
+
+    const start = new Date(propertyStore.dateRange.start);
+    const end = new Date(propertyStore.dateRange.end);
+
+    const diff = (end - start) / (1000 * 60 * 60 * 24);
+
+    return diff > 0 ? diff : 1;
   });
-  alert("¡Reserva exitosa!");
-  showPayment.value = false;
+
+  const totalPrice = computed(() => {
+  if (!property) return 0;
+  return property.price * nights.value;
+  });
+
+//  PAGO EXITOSO
+const handleSuccess = async () => {
+  try {
+    await bookingStore.createBooking({
+      property_id: property.id,
+      start_date: propertyStore.dateRange.start,
+      end_date: propertyStore.dateRange.end
+    });
+
+    alert("¡Reserva exitosa!");
+    showPayment.value = false;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error creando la reserva");
+  }
 };
 </script>

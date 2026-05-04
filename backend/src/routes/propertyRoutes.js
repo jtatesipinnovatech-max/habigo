@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const upload = require("../middlewares/upload");
 
 console.log("CARGANDO PROPERTY ROUTES CORRECTO 🔥");
 
@@ -28,6 +29,7 @@ router.post(
   '/',
   authMiddleware,
   roleMiddleware('host'),
+  upload.array("images", 10),
   createProperty
 );
 

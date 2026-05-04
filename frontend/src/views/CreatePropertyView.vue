@@ -29,7 +29,7 @@
 
       <section v-if="formStore.currentStep === 3" class="step">
         <h1 class="step__title">¿Dónde está ubicada tu propiedad?</h1>
-        <p class="step__subtitle">Ingresa la ciudad. Las coordenadas son opcionales.</p>
+        <p class="step__subtitle">Ingresa la ciudad. Ingresa la dirección de tu propiedad.</p>
 
         <div class="form-group">
           <label class="form-label">Ciudad *</label>
@@ -41,64 +41,48 @@
             @input="formStore.updateField('city', $event.target.value)"
           />
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Latitud (opcional)</label>
-            <input
-              class="form-input"
-              type="number"
-              step="0.000001"
-              placeholder="3.4516"
-              :value="formStore.form.lat"
-              @input="formStore.updateField('lat', $event.target.value)"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Longitud (opcional)</label>
-            <input
-              class="form-input"
-              type="number"
-              step="0.000001"
-              placeholder="-76.5320"
-              :value="formStore.form.lng"
-              @input="formStore.updateField('lng', $event.target.value)"
-            />
-          </div>
+        <div class="form-group">
+          <label class="form-label">Dirección *</label>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="Ej: Cra 10 #20-30"
+            :value="formStore.form.address"
+            @input="formStore.updateField('address', $event.target.value)"
+          />
         </div>
       </section>
 
       <section v-if="formStore.currentStep === 4" class="step">
-        <h1 class="step__title">Agrega una imagen de tu propiedad</h1>
-        <p class="step__subtitle">
-          Ingresa la ruta relativa de la imagen. Ej: <code>/images/casa1.jpg</code>
-        </p>
+  <h1 class="step__title">Agrega imágenes de tu propiedad</h1>
+  <p class="step__subtitle">Sube entre 1 y 10 imágenes</p>
 
-        <div class="form-group">
-          <label class="form-label">Ruta de imagen</label>
-          <input
-            class="form-input"
-            type="text"
-            placeholder="/images/mi-propiedad.jpg"
-            :value="formStore.form.image"
-            @input="formStore.updateField('image', $event.target.value)"
-          />
-        </div>
+  <div class="form-group">
+    <label class="form-label">Imágenes *</label>
 
-        <div v-if="formStore.form.image" class="image-preview">
-          <img
-            :src="formStore.form.image"
-            alt="Vista previa"
-            @error="imageError = true"
-          />
-          <p v-if="imageError" class="image-preview__error">
-            No se encontró la imagen en esa ruta.
-          </p>
-        </div>
-      </section>
+    <input
+      type="file"
+      multiple
+      accept="image/*"
+      @change="handleImages"
+    />
+
+    <p class="form-hint">Mínimo 1 imagen, máximo 10</p>
+  </div>
+
+  <div v-if="previewImages.length" class="image-preview">
+    <img
+      v-for="(img, index) in previewImages"
+      :key="index"
+      :src="img"
+      style="width: 120px; margin: 5px; border-radius: 8px;"
+    />
+  </div>
+</section>
 
       <section v-if="formStore.currentStep === 5" class="step">
         <h1 class="step__title">Describe tu propiedad</h1>
+
         <p class="step__subtitle">
           Cuéntale a los huéspedes qué hace especial tu espacio.
         </p>
@@ -185,9 +169,12 @@ import StepNavigation from '../components/StepNavigation.vue';
 import NumericStepper from '../components/NumericStepper.vue';
 import SpaceTypeSelector from '../components/SpaceTypeSelector.vue';
 
+const images = ref([]);
+const previewImages = ref([]);
 const router = useRouter();
 const formStore = usePropertyFormStore();
 const propertyStore = usePropertyStore();
+console.log("PAYLOAD:", formStore.payload);
 
 const loading = ref(false);
 const errorMsg = ref('');
@@ -199,8 +186,12 @@ const canContinue = computed(() => {
   switch (formStore.currentStep) {
     case 1: return !!formStore.spaceType;
     case 2: return formStore.maxGuests >= 1;
-    case 3: return formStore.form.city.trim().length >= 2;
-    case 4: return true;
+    case 3: 
+      return (
+        formStore.form.city.trim().length >= 2 &&
+        formStore.form.address.trim().length >= 5
+      );  
+    case 4: return images.value.length >= 1;
     case 5: return formStore.form.description.trim().length >= 10;
     case 6:
       return (
@@ -222,20 +213,52 @@ async function handleSubmit() {
   loading.value = true;
   errorMsg.value = '';
 
-  const result = await propertyStore.createProperty(formStore.payload);
+  const formData = new FormData();
+
+formData.append("title", formStore.form.title);
+formData.append("description", formStore.form.description);
+formData.append("city", formStore.form.city);
+formData.append("price", formStore.form.price);
+formData.append("address", formStore.form.address);
+
+// imágenes
+images.value.forEach(img => {
+  formData.append("images", img);
+});
+
+const result = await propertyStore.createProperty(formData);
 
   loading.value = false;
 
   if (result.success) {
     formStore.reset();
-    router.push('/dashboard');
+    router.push('/');
   } else {
     errorMsg.value = result.message;
   }
 }
 
+function handleImages(e) {
+  const files = Array.from(e.target.files);
+
+  if (files.length < 1) {
+    alert("Debes subir al menos una imagen");
+    return;
+  }
+
+  if (files.length > 10) {
+    alert("Máximo 10 imágenes");
+    return;
+  }
+
+  images.value = files;
+
+  // preview
+  previewImages.value = files.map(file => URL.createObjectURL(file));
+}
+
 function saveAndExit() {
-  router.push('/home');
+  router.push('/');
 }
 </script>
 

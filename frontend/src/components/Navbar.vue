@@ -2,7 +2,7 @@
   <nav class="relative z-50 bg-white shadow-sm border-b">
     <div class="flex justify-between items-center p-4 max-w-7xl mx-auto">
       
-      <div class="flex items-center gap-2 cursor-pointer" @click="$router.push('/home')">
+      <div class="flex items-center gap-2 cursor-pointer" @click="$router.push('/')">
         <img src="/logo.png" class="h-8" alt="Logo" />
         <h1 class="text-xl font-bold text-[#0d9488]">HabiGo</h1>
       </div>
@@ -57,16 +57,55 @@
       </div>
 
       <div class="flex items-center gap-6">
-        <button @click="$router.push('/bookings')" class="text-gray-700 hover:text-[#0d9488] font-medium transition">
-          Reservas
-        </button>
-        <button @click="$router.push('/create-property')" class="text-gray-700 hover:text-[#0d9488] font-medium transition">
-          Crear
-        </button>
-        <button @click="handleLogout" class="bg-[#0d9488] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#0f766e] transition">
-          Logout
-        </button>
-      </div>
+
+  <!-- 👤 NO LOGUEADO -->
+  <template v-if="!authStore.isAuthenticated">
+    
+    <button 
+      @click="router.push('/auth')"
+      class="text-gray-700 hover:text-[#0d9488] font-medium transition"
+    >
+      Login
+    </button>
+
+    <button 
+      @click="goHost"
+      class="text-gray-700 hover:text-[#FF385C] font-medium transition"
+    >
+      Volverse anfitrión
+    </button>
+
+  </template>
+
+  <!-- 🔐 LOGUEADO -->
+  <template v-else>
+
+    <!-- Solo host -->
+    <button 
+      v-if="authStore.user?.role === 'host'"
+      @click="router.push('/create-property')"
+      class="text-gray-700 hover:text-[#0d9488] font-medium transition"
+    >
+      Crear
+    </button>
+
+    <button 
+      @click="router.push('/bookings')"
+      class="text-gray-700 hover:text-[#0d9488] font-medium transition"
+    >
+      Reservas
+    </button>
+
+    <button 
+      @click="handleLogout"
+      class="bg-[#0d9488] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#0f766e] transition"
+    >
+      Logout
+    </button>
+
+  </template>
+
+</div>
 
     </div>
   </nav>
@@ -84,6 +123,30 @@ const propertyStore = usePropertyStore();
 const authStore = useAuthStore();
 const router = useRouter();
 const activeMenu = ref(null);
+
+const goHost = async () => {
+  if (!authStore.isAuthenticated) {
+    router.push('/auth?role=host');
+    return;
+  }
+
+  // ya logueado → convertir en host
+  try {
+    await fetch("http://localhost:3000/api/users/become-host", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      }
+    });
+
+    authStore.user.role = "host";
+
+    router.push('/create-property');
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const colombianCities = [
   { name: 'Bogotá', dep: 'Bogotá, D.C.', desc: 'Lugares emblemáticos como Plaza de Bolívar' },

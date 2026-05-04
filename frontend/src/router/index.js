@@ -1,47 +1,39 @@
 import { createRouter, createWebHistory } from "vue-router";
-import AuthView from "../views/AuthView.vue";
+import MainLayout from "../layouts/MainLayout.vue";
 import HomeView from "../views/HomeView.vue";
-import PropertyDetailView from "../views/PropertyDetailView.vue";
-import MainLayout from "../Layouts/MainLayout.vue";
-import { useAuthStore } from "../stores/auth";
+import AuthView from "../views/AuthView.vue";
 import CreatePropertyView from "../views/CreatePropertyView.vue";
 
 const routes = [
   {
     path: "/",
-    component: AuthView,
-  },
-  {
-    path: "/",
     component: MainLayout,
-    meta: { requiresAuth: true },
     children: [
       {
-        path: "home",
-        component: HomeView,
+        path: "",
+        component: HomeView, // 👈 ESTA ES LA CLAVE
       },
       {
         path: "property/:id",
-        component: PropertyDetailView,
-      },
-      {
-        path: "search",
-        name: "search-results",
-        component: () => import("../views/SearchResultsView.vue"),
+        component: () => import("../views/PropertyDetailView.vue"),
       },
       {
         path: "bookings",
         component: () => import("../views/BookingsView.vue"),
-      },
-      {
-        path: "dashboard",
-        component: () => import("../views/DashboardView.vue"),
+        meta: { requiresAuth: true },
       },
       {
         path: "create-property",
         component: CreatePropertyView,
-     },
+        meta: { requiresAuth: true, requiresHost: true },
+      },
     ],
+  },
+
+  // 🔥 LOGIN separado
+  {
+    path: "/auth",
+    component: AuthView,
   },
 ];
 
@@ -50,10 +42,15 @@ const router = createRouter({
   routes,
 });
 
+import { useAuthStore } from "../stores/auth";
+
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    next("/auth");
+  } else if (to.meta.requiresHost && auth.user?.role !== "host") {
+    alert("Debes ser anfitrión");
     next("/");
   } else {
     next();

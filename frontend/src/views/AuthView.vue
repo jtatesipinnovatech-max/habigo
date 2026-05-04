@@ -43,10 +43,13 @@
 </template>
 
 <script setup>
+import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
 import { useAuthStore } from "../stores/auth";
-import { useRouter } from "vue-router";
-import api from "../services/api";
+
+const router = useRouter();
+const route = useRoute();
+const auth = useAuthStore();
 
 const email = ref("");
 const password = ref("");
@@ -54,8 +57,8 @@ const name = ref("");
 const confirmPassword = ref("");
 const isLogin = ref(true);
 
-const auth = useAuthStore();
-const router = useRouter();
+// 🔥 CAPTURAR ROLE (clave)
+const role = route.query.role || "guest";
 
 const handleLogin = async () => {
   try {
@@ -63,8 +66,10 @@ const handleLogin = async () => {
       email: email.value,
       password: password.value,
     });
+    
+    const redirect = route.query.redirect || "/";
+    router.push(redirect);
 
-    router.push("/home");
   } catch (error) {
     alert("Error en login");
   }
@@ -77,14 +82,16 @@ const handleRegister = async () => {
   }
 
   try {
-    await api.post("/users/register", {
+    await auth.register({
       email: email.value,
       password: password.value,
       name: name.value,
-    });
+    }, role); // 🔥 AQUÍ VA EL ROLE
 
     alert("Usuario creado");
+
     isLogin.value = true;
+
   } catch (error) {
     alert("Error en registro");
   }

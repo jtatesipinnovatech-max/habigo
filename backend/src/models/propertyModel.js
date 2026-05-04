@@ -1,6 +1,8 @@
 const pool = require('../config/db');
 
-// Obtener propiedades
+// ===============================
+// 🔍 Obtener propiedades
+// ===============================
 const getAllProperties = async (city) => {
   let query = 'SELECT * FROM properties';
   let values = [];
@@ -14,29 +16,44 @@ const getAllProperties = async (city) => {
   return result.rows;
 };
 
-// Crear propiedad
+
+// ===============================
+// 🏡 Crear propiedad
+// ===============================
 const createProperty = async ({
   title,
   description,
   city,
   price,
   user_id,
-  lat,
-  lng,
-  image
+  address,
+  image,
+  max_guests
 }) => {
   const result = await pool.query(
     `INSERT INTO properties
-    (title, description, city, price, user_id, lat, lng, image)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    RETURNING *`,
-    [title, description, city, price, user_id, lat, lng, image]
+     (title, description, city, price, user_id, address, image, max_guests)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+     RETURNING *`,
+    [
+      title,
+      description,
+      city,
+      price,
+      user_id,
+      address,
+      image,
+      max_guests || 1 // 🔥 valor por defecto
+    ]
   );
 
   return result.rows[0];
 };
 
-// Propiedades por usuario
+
+// ===============================
+// 👤 Propiedades por usuario
+// ===============================
 const getPropertiesByUser = async (user_id) => {
   const result = await pool.query(
     'SELECT * FROM properties WHERE user_id = $1',
@@ -45,22 +62,53 @@ const getPropertiesByUser = async (user_id) => {
 
   return result.rows;
 };
-// Actualizar propiedad
+
+
+// ===============================
+// ✏️ Actualizar propiedad
+// ===============================
 const updateProperty = async (id, user_id, data) => {
-  const { title, description, city, price, lat, lng, image } = data;
+  const {
+    title,
+    description,
+    city,
+    price,
+    address,
+    image,
+    max_guests
+  } = data;
 
   const result = await pool.query(
     `UPDATE properties
-     SET title=$1, description=$2, city=$3, price=$4, lat=$5, lng=$6, image=$7
+     SET title=$1,
+         description=$2,
+         city=$3,
+         price=$4,
+         address=$5,
+         image=$6,
+         max_guests=$7
      WHERE id=$8 AND user_id=$9
      RETURNING *`,
-    [title, description, city, price, lat, lng, image, id, user_id]
+    [
+      title,
+      description,
+      city,
+      price,
+      address,
+      image,
+      max_guests || 1,
+      id,
+      user_id
+    ]
   );
 
   return result.rows[0];
 };
 
-// Eliminar propiedad
+
+// ===============================
+// 🗑️ Eliminar propiedad
+// ===============================
 const deleteProperty = async (id, user_id) => {
   const result = await pool.query(
     `DELETE FROM properties
@@ -72,6 +120,10 @@ const deleteProperty = async (id, user_id) => {
   return result.rows[0];
 };
 
+
+// ===============================
+// 📦 EXPORTS
+// ===============================
 module.exports = {
   getAllProperties,
   createProperty,
