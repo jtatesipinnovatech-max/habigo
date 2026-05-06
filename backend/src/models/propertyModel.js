@@ -4,7 +4,7 @@ const pool = require('../config/db');
 // 🔍 Obtener propiedades
 // ===============================
 const getAllProperties = async (city) => {
-  let query = 'SELECT * FROM properties';
+  let query = 'SELECT * FROM properties WHERE is_active = true';
   let values = [];
 
   if (city) {
@@ -111,7 +111,8 @@ const updateProperty = async (id, user_id, data) => {
 // ===============================
 const deleteProperty = async (id, user_id) => {
   const result = await pool.query(
-    `DELETE FROM properties
+    `UPDATE properties
+     SET is_active = false
      WHERE id=$1 AND user_id=$2
      RETURNING *`,
     [id, user_id]
@@ -119,9 +120,6 @@ const deleteProperty = async (id, user_id) => {
 
   return result.rows[0];
 };
-
-
-// ===============================
 // 📦 EXPORTS
 // ===============================
 module.exports = {

@@ -9,6 +9,14 @@ const findUserByEmail = async (email) => {
 
   return result.rows[0];
 };
+const updateRole = async (id, role) => {
+  const result = await pool.query(
+    "UPDATE users SET role = $1 WHERE id = $2 RETURNING *",
+    [role, id]
+  );
+
+  return result.rows[0];
+};
 
 // Crear usuario con role
 const createUser = async (email, password, role = 'guest') => {
@@ -24,5 +32,6 @@ const createUser = async (email, password, role = 'guest') => {
 
 module.exports = {
   findUserByEmail,
-  createUser
+  createUser,
+  updateRole
 };

@@ -49,29 +49,51 @@ const createBooking = async (req, res) => {
     });
   }
 };
-
 // Eliminar reserva
 const deleteBooking = async (req, res) => {
   const { id } = req.params;
   const user_id = req.user.id;
 
   try {
-    const deleted = await BookingModel.deleteBooking(id, user_id);
+    //  1. traer la reserva
+    const booking = await BookingModel.getBookingById(id);
 
-    if (!deleted) {
+    if (!booking) {
       return res.status(404).json({
         message: 'Reserva no encontrada'
       });
     }
 
+    //  2. validar que sea del usuario
+    if (booking.user_id !== user_id) {
+      return res.status(403).json({
+        message: 'No tienes permiso'
+      });
+    }
+
+    //  3. VALIDAR TIEMPO 
+    const now = new Date();
+    const start = new Date(booking.start_date);
+
+    const diffHours = (start - now) / (1000 * 60 * 60);
+
+    if (diffHours <= 24) {
+      return res.status(400).json({
+        message: 'No puedes cancelar con menos de 24 horas'
+      });
+    }
+
+    //  4. eliminar
+    await BookingModel.deleteBooking(id, user_id);
+
     res.json({
-      message: 'Reserva cancelada 🔥'
+      message: 'Reserva cancelada correctamente'
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      error: 'Error al cancelar reserva'
+      error: 'Error cancelando reserva'
     });
   }
 };

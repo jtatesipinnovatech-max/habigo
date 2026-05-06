@@ -20,6 +20,11 @@ export const useBookingStore = defineStore("booking", {
         this.loading = false;
       }
     },
+    async fetchMyBookings() {
+        const res = await api.get("/bookings/my-bookings");
+
+        this.bookings = res.data;
+    },
 
     async createBooking(data) {
       console.log("📦 FRONT ENVÍA:", data);
@@ -27,6 +32,17 @@ export const useBookingStore = defineStore("booking", {
         await api.post("/bookings", data);
       } catch (err) {
         this.error = "Error creando reserva";
+      }
+    },
+    async cancelBooking(id) {
+      try {
+        await api.delete(`/bookings/${id}`);
+
+        //  refrescar lista
+        await this.fetchMyBookings();
+
+      } catch (error) {
+        throw error;
       }
     },
   },

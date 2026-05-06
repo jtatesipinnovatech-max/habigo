@@ -92,17 +92,23 @@ const login = async (req, res) => {
       });
     }
 
+    // 🔍 BUSCAR USUARIO
     const user = await UserModel.findUserByEmail(email);
 
-    // 🔴 NO EXISTE
     if (!user) {
       return res.status(401).json({
         message: 'Credenciales incorrectas'
       });
     }
 
+    // 🧪 DEBUG (ahora sí correcto)
+    console.log("INPUT PASSWORD:", password);
+    console.log("HASH EN DB:", user.password);
+
     // 🔐 VALIDAR PASSWORD
     const valid = await bcrypt.compare(password, user.password);
+
+    console.log("MATCH:", valid);
 
     if (!valid) {
       return res.status(401).json({
@@ -110,7 +116,7 @@ const login = async (req, res) => {
       });
     }
 
-    // 🔑 TOKEN (usar .env)
+    // 🔑 TOKEN
     const token = jwt.sign(
       {
         id: user.id,
@@ -137,8 +143,31 @@ const login = async (req, res) => {
     });
   }
 };
+const becomeHost = async (req, res) => {
+  try {
+    const user = await UserModel.updateRole(req.user.id, "host");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no encontrado"
+      });
+    }
+
+    res.json({
+      message: "Ahora eres anfitrión",
+      user
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Error al actualizar rol"
+    });
+  }
+};
 
 module.exports = {
   register,
-  login
+  login,
+  becomeHost
 };

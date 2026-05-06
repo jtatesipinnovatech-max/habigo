@@ -11,7 +11,20 @@ const routes = [
     children: [
       {
         path: "",
-        component: HomeView, // 👈 ESTA ES LA CLAVE
+        component: HomeView, 
+      },
+      {
+      path: "/bookings",
+      component: () => import("../views/MyBookingsView.vue")
+      },
+      {
+      path: "edit-property/:id",
+        component: () => import("../views/EditPropertyView.vue"),
+        meta: { requiresAuth: true, requiresHost: true }
+      },
+      {
+      path: "/my-properties",
+      component: () => import("../views/MyPropertiesView.vue"),
       },
       {
         path: "property/:id",

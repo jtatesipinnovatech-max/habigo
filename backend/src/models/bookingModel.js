@@ -39,16 +39,36 @@ const deleteBooking = async (id, user_id) => {
 
   return result.rows[0];
 };
-
-// Reservas por usuario
-const getBookingsByUser = async (user_id) => {
+const getBookingById = async (id) => {
   const result = await pool.query(
-    'SELECT * FROM bookings WHERE user_id = $1',
-    [user_id]
+    `SELECT * FROM bookings WHERE id = $1`,
+    [id]
   );
 
-  return result.rows;
+  return result.rows[0];
 };
+  const getBookingsByUser = async (user_id) => {
+    const result = await pool.query(
+      `SELECT 
+          b.id,
+          b.start_date,
+          b.end_date,
+          p.title,
+          p.city,
+          p.image
+      FROM bookings b
+      JOIN properties p ON b.property_id = p.id
+      WHERE b.user_id = $1`,
+      [user_id]
+    );
+
+    return result.rows.map(b => ({
+      ...b,
+      image: Array.isArray(b.image)
+        ? b.image[0]
+        : b.image
+    }));
+  };
 const getBookingsByProperty = async (property_id) => {
   const result = await pool.query(
     "SELECT start_date, end_date FROM bookings WHERE property_id = $1",
@@ -63,5 +83,6 @@ module.exports = {
   deleteBooking,
   getBookingsByUser,
   checkBookingConflict,
-  getBookingsByProperty 
+  getBookingsByProperty,
+  getBookingById 
 };

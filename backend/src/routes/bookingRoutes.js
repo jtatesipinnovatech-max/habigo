@@ -9,5 +9,6 @@ router.post('/', authMiddleware, createBooking);
 router.get('/', authMiddleware, getMyBookings);
 router.delete('/:id', authMiddleware, deleteBooking);
 router.get("/check-availability", checkAvailability);
+router.get("/my-bookings", authMiddleware, getMyBookings);
 
 module.exports = router;

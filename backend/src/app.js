@@ -1,3 +1,7 @@
+require("dotenv").config({
+  path: require("path").resolve(__dirname, "../.env")
+});
+
 const express = require('express');
 const cors = require('cors');
 
@@ -7,13 +11,9 @@ const userRoutes = require('./routes/userRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
-
 const propertyRoutes = require('./routes/propertyRoutes');
 
-console.log("TYPE:", typeof propertyRoutes);
-console.log("VALUE:", propertyRoutes);
-
-require("dotenv").config();
+console.log("JWT:", process.env.JWT_SECRET); 
 
 // Middlewares
 app.use(cors());

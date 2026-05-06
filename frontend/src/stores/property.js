@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getProperties, createProperty } from "../services/properties";
+import { getProperties } from "../services/properties";
 import api from "../services/api";
 
 export const usePropertyStore = defineStore('property', {
@@ -10,7 +10,7 @@ export const usePropertyStore = defineStore('property', {
       end: null
     },
     guests: {
-      adultos: 0,
+      adultos: 1,
       ninos: 0,
       bebes: 0,
       mascotas: 0
@@ -57,6 +57,7 @@ export const usePropertyStore = defineStore('property', {
   },
 
   actions: {
+
     setSearchQuery(val) {
       this.searchQuery = val;
     },
@@ -68,29 +69,31 @@ export const usePropertyStore = defineStore('property', {
       }
     },
 
+    //  CREAR PROPIEDAD
     async createProperty(data) {
-    try {
-     const res = await api.post("/properties", data, {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      }
-     });
+      try {
+        const res = await api.post("/properties", data, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
 
-      return {
-      success: true,
-      data: res.data
-      };
+        return {
+          success: true,
+          data: res.data
+        };
 
       } catch (error) {
-      console.error("Error creando propiedad:", error.response?.data || error);
+        console.error("Error creando propiedad:", error.response?.data || error);
 
-     return {
-        success: false,
-        message: "Error creando propiedad"
-      };
-    }
-  },
+        return {
+          success: false,
+          message: "Error creando propiedad"
+        };
+      }
+    },
 
+    //  TODAS LAS PROPIEDADES
     async fetchProperties() {
       try {
         this.loading = true;
@@ -105,6 +108,7 @@ export const usePropertyStore = defineStore('property', {
           price: Number(p.price),
           rating: 4.5,
           image: p.image || "/default.jpg",
+          is_active: p.is_active,
         }));
 
       } catch (error) {
@@ -112,6 +116,70 @@ export const usePropertyStore = defineStore('property', {
       } finally {
         this.loading = false;
       }
+    },
+        async updateProperty(id, data) {
+      try {
+        const res = await api.put(`/properties/${id}`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+
+        return {
+          success: true,
+          data: res.data
+        };
+
+      } catch (error) {
+        console.error(error);
+        return {
+          success: false,
+          message: "Error actualizando propiedad"
+        };
+  }
+    },
+
+    //  MIS PROPIEDADES (HOST)
+    async fetchMyProperties() {
+      try {
+        const res = await api.get("/properties/my-properties");
+
+        this.properties = res.data.map(p => ({
+          id: p.id,
+          title: p.title,
+          description: p.description || '',
+          location: p.city,
+          address: p.address,
+          price: Number(p.price),
+          rating: 4.5,
+          image: p.image || "/default.jpg",
+          is_active: p.is_active,
+        }));
+
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    //  SOFT DELETE
+    async deleteProperty(id) {
+      try {
+        await api.delete(`/properties/${id}`);
+        await this.fetchMyProperties();
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    //  REACTIVAR
+    async reactivateProperty(id) {
+      try {
+        await api.put(`/properties/${id}/reactivate`);
+        await this.fetchMyProperties();
+      } catch (error) {
+        console.error(error);
+      }
     }
+
   }
 });
