@@ -3,7 +3,7 @@ import {
   createWebHistory
 } from "vue-router";
 
-import MainLayout from "../layouts/MainLayout.vue";
+import MainLayout from "../Layouts/MainLayout.vue";
 
 import HomeView from "../views/HomeView.vue";
 
