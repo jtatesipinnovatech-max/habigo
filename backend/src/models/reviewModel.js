@@ -1,6 +1,10 @@
 const pool = require('../config/db');
 
-// Crear reseña
+
+// =====================================
+// CREAR RESEÑA
+// =====================================
+
 const createReview = async ({
   property_id,
   user_id,
@@ -8,70 +12,177 @@ const createReview = async ({
   rating,
   comment
 }) => {
+
   const result = await pool.query(
-    `INSERT INTO reviews
-    (property_id, user_id, booking_id, rating, comment)
+    `
+    INSERT INTO reviews
+    (
+      property_id,
+      user_id,
+      booking_id,
+      rating,
+      comment
+    )
+
     VALUES ($1,$2,$3,$4,$5)
-    RETURNING *`,
-    [property_id, user_id, booking_id, rating, comment]
+
+    RETURNING *
+    `,
+    [
+      property_id,
+      user_id,
+      booking_id,
+      rating,
+      comment
+    ]
   );
 
   return result.rows[0];
 };
 
-// Reseñas por propiedad
-const getReviewsByProperty = async (property_id) => {
+
+// =====================================
+// RESEÑAS POR PROPIEDAD
+// =====================================
+
+const getReviewsByProperty = async (
+  property_id
+) => {
+
   const result = await pool.query(
-    `SELECT
+    `
+    SELECT
       r.id,
       r.rating,
       r.comment,
       r.created_at,
       u.name AS user_name
-     FROM reviews r
-     JOIN users u ON r.user_id = u.id
-     WHERE r.property_id = $1
-     ORDER BY r.created_at DESC`,
+
+    FROM reviews r
+
+    JOIN users u
+    ON r.user_id = u.id
+
+    WHERE r.property_id = $1
+
+    ORDER BY r.created_at DESC
+    `,
     [property_id]
   );
 
   return result.rows;
 };
 
-// Promedio rating
-const getAverageRating = async (property_id) => {
+
+// =====================================
+// PROMEDIO
+// =====================================
+
+const getAverageRating = async (
+  property_id
+) => {
+
   const result = await pool.query(
-    `SELECT
-      ROUND(AVG(rating)::numeric,1) AS average,
+    `
+    SELECT
+      ROUND(
+        AVG(rating)::numeric,
+        1
+      ) AS average,
+
       COUNT(*) AS total
-     FROM reviews
-     WHERE property_id = $1`,
+
+    FROM reviews
+
+    WHERE property_id = $1
+    `,
     [property_id]
   );
 
   return result.rows[0];
 };
 
-// Validar booking terminado
+
+// =====================================
+// VALIDAR BOOKING TERMINADO
+// =====================================
+
 const checkCompletedBooking = async (
   booking_id,
   user_id
 ) => {
+
   const result = await pool.query(
-    `SELECT *
-     FROM bookings
-     WHERE id = $1
-     AND user_id = $2
-     AND end_date < NOW()`,
+    `
+    SELECT *
+
+    FROM bookings
+
+    WHERE id = $1
+
+    AND user_id = $2
+
+    AND end_date < NOW()
+
+    AND status = 'confirmed'
+    `,
     [booking_id, user_id]
   );
 
   return result.rows[0];
 };
 
+
+// =====================================
+// VALIDAR SI PUEDE RESEÑAR
+// =====================================
+
+const getReviewableBooking = async (
+  property_id,
+  user_id
+) => {
+
+  const result = await pool.query(
+    `
+    SELECT b.id
+
+    FROM bookings b
+
+    WHERE b.property_id = $1
+
+    AND b.user_id = $2
+
+    AND b.status = 'confirmed'
+
+    AND b.end_date < NOW()
+
+    AND NOT EXISTS (
+
+      SELECT 1
+
+      FROM reviews r
+
+      WHERE r.booking_id = b.id
+
+    )
+
+    LIMIT 1
+    `,
+    [property_id, user_id]
+  );
+
+  return result.rows[0];
+};
+
+
+// =====================================
+// EXPORTS
+// =====================================
+
 module.exports = {
   createReview,
   getReviewsByProperty,
   getAverageRating,
-  checkCompletedBooking
+  checkCompletedBooking,
+  getReviewableBooking
 };

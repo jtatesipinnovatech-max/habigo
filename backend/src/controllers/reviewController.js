@@ -1,23 +1,49 @@
 const ReviewModel = require('../models/reviewModel');
 
-// Crear reseña
+
+// =====================================
+// CREAR RESEÑA
+// =====================================
+
 const postReview = async (req, res) => {
-  const { property_id, booking_id, rating, comment } = req.body;
+
+  const {
+    property_id,
+    booking_id,
+    rating,
+    comment
+  } = req.body;
+
   const user_id = req.user.id;
 
   try {
-    if (!property_id || !booking_id || !rating) {
+
+    // VALIDACIONES
+    if (
+      !property_id ||
+      !booking_id ||
+      !rating
+    ) {
+
       return res.status(400).json({
-        error: 'property_id, booking_id y rating requeridos'
+        error:
+          'property_id, booking_id y rating requeridos'
       });
     }
 
-    if (rating < 1 || rating > 5) {
+    // RATING
+    if (
+      rating < 1 ||
+      rating > 5
+    ) {
+
       return res.status(400).json({
-        error: 'Rating debe ser entre 1 y 5'
+        error:
+          'Rating debe ser entre 1 y 5'
       });
     }
 
+    // BOOKING TERMINADO
     const booking =
       await ReviewModel.checkCompletedBooking(
         booking_id,
@@ -25,42 +51,65 @@ const postReview = async (req, res) => {
       );
 
     if (!booking) {
+
       return res.status(403).json({
-        error: 'Solo puedes reseñar reservas finalizadas'
+        error:
+          'Solo puedes reseñar reservas finalizadas'
       });
     }
 
+    // CREAR
     const review =
       await ReviewModel.createReview({
+
         property_id,
+
         user_id,
+
         booking_id,
+
         rating,
+
         comment
+
       });
 
     res.status(201).json(review);
 
   } catch (error) {
+
     console.error(error);
 
+    // UNIQUE
     if (error.code === '23505') {
+
       return res.status(409).json({
-        error: 'Ya reseñaste esta reserva'
+        error:
+          'Ya reseñaste esta reserva'
       });
     }
 
     res.status(500).json({
-      error: 'Error creando reseña'
+      error:
+        'Error creando reseña'
     });
   }
 };
 
-// Obtener reseñas propiedad
-const getPropertyReviews = async (req, res) => {
+
+// =====================================
+// OBTENER RESEÑAS
+// =====================================
+
+const getPropertyReviews = async (
+  req,
+  res
+) => {
+
   const { id } = req.params;
 
   try {
+
     const reviews =
       await ReviewModel.getReviewsByProperty(id);
 
@@ -68,20 +117,77 @@ const getPropertyReviews = async (req, res) => {
       await ReviewModel.getAverageRating(id);
 
     res.json({
-      average: stats.average,
-      total: stats.total,
+
+      average:
+        stats.average || 0,
+
+      total:
+        stats.total || 0,
+
       reviews
+
     });
 
   } catch (error) {
+
     console.error(error);
+
     res.status(500).json({
-      error: 'Error obteniendo reseñas'
+      error:
+        'Error obteniendo reseñas'
     });
   }
 };
 
+
+// =====================================
+// VALIDAR SI PUEDE RESEÑAR
+// =====================================
+
+const canReview = async (
+  req,
+  res
+) => {
+
+  const user_id = req.user.id;
+
+  const { property_id } = req.params;
+
+  try {
+
+    const booking =
+      await ReviewModel.getReviewableBooking(
+        property_id,
+        user_id
+      );
+
+    res.json({
+
+      canReview: !!booking,
+
+      bookingId:
+        booking?.id || null
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      error:
+        'Error validando reseña'
+    });
+  }
+};
+
+
+// =====================================
+// EXPORTS
+// =====================================
+
 module.exports = {
   postReview,
-  getPropertyReviews
+  getPropertyReviews,
+  canReview
 };

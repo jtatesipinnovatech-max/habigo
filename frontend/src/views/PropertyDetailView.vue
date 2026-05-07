@@ -67,6 +67,164 @@
             </div>
           </div>
 
+          <!-- ⭐ RESEÑAS -->
+        <div class="mt-12">
+
+          <!-- HEADER -->
+          <div class="flex items-center gap-3 mb-8">
+
+            <span class="text-3xl">
+              ⭐
+            </span>
+
+            <h2 class="text-2xl font-bold">
+
+              {{ averageRating || 0 }}
+
+              ·
+
+              {{ totalReviews }} reseñas
+
+            </h2>
+
+          </div>
+
+
+        <!-- FORMULARIO -->
+        <div v-if="canReview">
+
+          <div class="border rounded-2xl p-6 mb-10">
+
+            <h3 class="text-xl font-bold mb-4">
+              Deja tu reseña
+            </h3>
+
+            <!-- RATING -->
+            <select
+              v-model="rating"
+              class="w-full border rounded-xl p-3 mb-4"
+            >
+
+              <option :value="5">
+                ⭐⭐⭐⭐⭐ Excelente
+              </option>
+
+              <option :value="4">
+                ⭐⭐⭐⭐ Muy bueno
+              </option>
+
+              <option :value="3">
+                ⭐⭐⭐ Bueno
+              </option>
+
+              <option :value="2">
+                ⭐⭐ Regular
+              </option>
+
+              <option :value="1">
+                ⭐ Malo
+              </option>
+
+            </select>
+
+            <!-- COMMENT -->
+            <textarea
+              v-model="comment"
+              rows="4"
+              placeholder="Comparte tu experiencia..."
+              class="w-full border rounded-xl p-4 mb-4"
+            ></textarea>
+
+            <!-- BTN -->
+            <button
+              @click="submitReview"
+              class="bg-black text-white px-6 py-3 rounded-xl hover:opacity-90 transition"
+            >
+              Publicar reseña
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- NO PUEDE RESEÑAR -->
+        <div
+          v-else
+          class="border rounded-2xl p-6 mb-10 text-gray-500"
+        >
+
+          Solo los huéspedes que completaron
+          una reserva pueden dejar reseñas.
+
+        </div>
+
+
+          <!-- LISTA REVIEWS -->
+          <div
+            v-if="reviews.length > 0"
+            class="space-y-8"
+          >
+
+            <div
+              v-for="r in reviews"
+              :key="r.id"
+              class="border-b pb-6"
+            >
+
+              <!-- USER -->
+              <div class="flex items-center justify-between mb-2">
+
+                <div>
+
+                  <p class="font-bold text-lg">
+                    {{ r.user_name }}
+                  </p>
+
+                  <p class="text-sm text-gray-400">
+
+                    {{
+                      new Date(r.created_at)
+                        .toLocaleDateString('es-CO')
+                    }}
+
+                  </p>
+
+                </div>
+
+                <!-- STARS -->
+                <div class="text-yellow-500 text-lg">
+
+                  {{ '⭐'.repeat(r.rating) }}
+
+                </div>
+
+              </div>
+
+              <!-- COMMENT -->
+              <p class="text-gray-700 leading-relaxed">
+
+                {{ r.comment }}
+
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- EMPTY -->
+          <div
+            v-else
+            class="text-gray-500"
+          >
+
+            Aún no hay reseñas.
+
+          </div>
+
+        </div>
+
         </div>
 
         <!-- DERECHA: Card de reserva -->
@@ -173,208 +331,585 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { computed } from "vue";
+import {
+  ref,
+  computed,
+  onMounted
+} from "vue";
 
-import { usePropertyStore } from "../stores/property";
-import { useAuthStore } from "../stores/auth";
-import { useBookingStore } from "../stores/booking";
+import {
+  useRoute,
+  useRouter
+} from "vue-router";
 
-import { onMounted } from "vue";
+import {
+  usePropertyStore
+} from "../stores/property";
 
-onMounted(async () => {
-  try {
-    const res = await api.get("/bookings/by-property", {
-      params: {
-        property_id: property.id
-      }
-    });
+import {
+  useAuthStore
+} from "../stores/auth";
 
-    disabledDates.value = res.data;
-
-  } catch (error) {
-    console.error(error);
-  }
-});
+import {
+  useBookingStore
+} from "../stores/booking";
 
 import api from "../services/api";
+
 import PaymentModal from "../components/PaymentModal.vue";
 
 import {
-  ArrowLeft, Star, MapPin,
-  Wifi, Wind, Tv, Car, UtensilsCrossed,
-  WashingMachine, Waves, Shield
+  getPropertyReviews,
+  createReview,
+  canReviewProperty
+} from "../services/reviews";
+
+import {
+  ArrowLeft,
+  Star,
+  MapPin,
+  Wifi,
+  Wind,
+  Tv,
+  Car,
+  UtensilsCrossed,
+  WashingMachine,
+  Waves,
+  Shield
 } from "lucide-vue-next";
 
-const today = new Date().toISOString().split("T")[0];
+
+// =====================================
 // ROUTER
+// =====================================
+
 const router = useRouter();
 const route = useRoute();
-const disabledDates = ref([]);
 
+
+// =====================================
 // STORES
+// =====================================
+
 const propertyStore = usePropertyStore();
 const bookingStore = useBookingStore();
 const auth = useAuthStore();
 
+
+// =====================================
 // PROPERTY
-const property = propertyStore.properties.find(
-  (p) => p.id === Number(route.params.id)
+// =====================================
+
+const property = computed(() =>
+  propertyStore.properties.find(
+    (p) => p.id === Number(route.params.id)
+  )
 );
 
-// IMAGE
-const imgSrc = ref(property?.image?.[0] || '/default.jpg');
 
-// MODAL
+// =====================================
+// STATES
+// =====================================
+
+const canReview = ref(false);
+
+const disabledDates = ref([]);
+
 const showPayment = ref(false);
 
-//AMENITES
+const imgSrc = ref('/default.jpg');
+
+const today =
+  new Date().toISOString().split("T")[0];
+
+
+// =====================================
+// REVIEWS
+// =====================================
+
+const reviews = ref([]);
+
+const averageRating = ref(0);
+
+const totalReviews = ref(0);
+
+const rating = ref(5);
+
+const comment = ref('');
+
+
+const selectedBookingId = ref(null);
+
+
+// =====================================
+// AMENITIES
+// =====================================
+
 const amenityMap = {
-  wifi: { label: "Wifi", icon: Wifi },
-  aire: { label: "Aire acondicionado", icon: Wind },
-  tv: { label: "TV", icon: Tv },
-  parking: { label: "Estacionamiento", icon: Car },
-  cocina: { label: "Cocina", icon: UtensilsCrossed },
-  lavadora: { label: "Lavadora", icon: WashingMachine },
-  piscina: { label: "Piscina", icon: Waves },
-  seguridad: { label: "Seguridad 24h", icon: Shield }
+
+  wifi: {
+    label: "Wifi",
+    icon: Wifi
+  },
+
+  aire: {
+    label: "Aire acondicionado",
+    icon: Wind
+  },
+
+  tv: {
+    label: "TV",
+    icon: Tv
+  },
+
+  parking: {
+    label: "Estacionamiento",
+    icon: Car
+  },
+
+  cocina: {
+    label: "Cocina",
+    icon: UtensilsCrossed
+  },
+
+  lavadora: {
+    label: "Lavadora",
+    icon: WashingMachine
+  },
+
+  piscina: {
+    label: "Piscina",
+    icon: Waves
+  },
+
+  seguridad: {
+    label: "Seguridad 24h",
+    icon: Shield
+  }
 };
 
+
+// =====================================
 // PRICE FORMAT
+// =====================================
+
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0
-  }).format(price);
+
+  return new Intl.NumberFormat(
+    'es-CO',
+    {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }
+  ).format(price);
 };
 
-//  RESERVAR (FLUJO REAL)
+
+// =====================================
+// NOCHES
+// =====================================
+
+const nights = computed(() => {
+
+  if (
+    !propertyStore.dateRange.start ||
+    !propertyStore.dateRange.end
+  ) return 1;
+
+  const start =
+    new Date(propertyStore.dateRange.start);
+
+  const end =
+    new Date(propertyStore.dateRange.end);
+
+  const diff =
+    (end - start) /
+    (1000 * 60 * 60 * 24);
+
+  return diff > 0 ? diff : 1;
+});
+
+
+// =====================================
+// TOTAL
+// =====================================
+
+const totalPrice = computed(() => {
+
+  if (!property.value) return 0;
+
+  return (
+    property.value.price *
+    nights.value
+  );
+});
+
+
+// =====================================
+// CARGAR REVIEWS
+// =====================================
+
+const loadReviews = async () => {
+
+  try {
+
+    const data =
+      await getPropertyReviews(
+        route.params.id
+      );
+
+    reviews.value = data.reviews;
+
+    averageRating.value =
+      data.average || 0;
+
+    totalReviews.value =
+      data.total || 0;
+
+  } catch (error) {
+
+    console.error(error);
+  }
+};
+
+// =====================================
+// VALIDAR SI PUEDE RESEÑAR
+// =====================================
+
+const validateReview = async () => {
+
+  // 🔒 login requerido
+  if (!auth.isAuthenticated) {
+
+    canReview.value = false;
+
+    return;
+  }
+
+  try {
+
+    const data =
+      await canReviewProperty(
+        property.value.id
+      );
+
+    canReview.value =
+      data.canReview;
+
+    selectedBookingId.value =
+      data.bookingId;
+
+  } catch (error) {
+
+    console.error(error);
+
+    canReview.value = false;
+  }
+};
+
+
+// =====================================
+// CREAR REVIEW
+// =====================================
+
+const submitReview = async () => {
+
+  try {
+
+    await createReview({
+
+      property_id:
+        property.value.id,
+
+      booking_id:
+        selectedBookingId.value,
+
+      rating:
+        rating.value,
+
+      comment:
+        comment.value
+
+    });
+
+    comment.value = '';
+
+    rating.value = 5;
+
+    await loadReviews();
+
+    alert("Reseña publicada");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.response?.data?.error ||
+      "Error creando reseña"
+    );
+  }
+};
+
+
+// =====================================
+// FECHAS BLOQUEADAS
+// =====================================
+
+const loadBlockedDates = async () => {
+
+  try {
+
+    const res =
+      await api.get(
+        "/bookings/by-property",
+        {
+          params: {
+            property_id:
+              property.value.id
+          }
+        }
+      );
+
+    disabledDates.value =
+      res.data;
+
+  } catch (error) {
+
+    console.error(error);
+  }
+};
+
+
+// =====================================
+// VALIDAR BLOQUEO
+// =====================================
+
+const isDateBlocked = (start, end) => {
+
+  return disabledDates.value.some(b => {
+
+    return (
+      start <= new Date(b.end_date)
+      &&
+      end >= new Date(b.start_date)
+    );
+  });
+};
+
+
+// =====================================
+// RESERVAR
+// =====================================
+
 const book = async () => {
 
-  const start = new Date(propertyStore.dateRange.start);
-  const end = new Date(propertyStore.dateRange.end);
-  const maxGuests = property?.max_guests || 1;
-  const isDateBlocked = (start, end) => {
-  return disabledDates.value.some(b => {
-    return (
-      (start <= b.end_date && end >= b.start_date)
-      );
-    });
-  };
-  if (!Number.isInteger(propertyStore.guests.adultos)) {
-  alert("Los huéspedes deben ser un número entero");
-      return;
-    }
+  if (!property.value) return;
 
-  const startDateObj = new Date(propertyStore.dateRange.start);
-  const endDateObj = new Date(propertyStore.dateRange.end);
-
-  if (isDateBlocked(startDateObj, endDateObj)) {
-   alert("Estas fechas ya están reservadas");
-   return;
-  }
-
-  if (propertyStore.guests.adultos < 1) {
-  alert("Debe haber al menos 1 huésped");
-  return;
-  }
-
-  if (end <= start) {
-    alert("La fecha de salida debe ser posterior a la de llegada");
-    return;
-  }
-
-  if (propertyStore.guests.adultos > maxGuests) {
-    alert(`Máximo ${maxGuests} huéspedes`);
-    return;
-  }
-
-  // 🔐 1. NO LOGUEADO
+  // 🔐 LOGIN
   if (!auth.isAuthenticated) {
+
     router.push({
       path: "/auth",
       query: {
         redirect: route.fullPath
       }
     });
-    return; // 🔥 ESTO FALTABA
+
+    return;
   }
 
-  // 📅 2. VALIDAR FECHAS
-  if (!propertyStore.dateRange.start || !propertyStore.dateRange.end) {
-    alert("Selecciona fechas primero");
+  // 📅 FECHAS
+  if (
+    !propertyStore.dateRange.start ||
+    !propertyStore.dateRange.end
+  ) {
+
+    alert("Selecciona fechas");
+
+    return;
+  }
+
+  const start =
+    new Date(propertyStore.dateRange.start);
+
+  const end =
+    new Date(propertyStore.dateRange.end);
+
+  // 🚫 PASADO
+  if (start < new Date(today)) {
+
+    alert(
+      "No puedes reservar fechas pasadas"
+    );
+
+    return;
+  }
+
+  // 🚫 ORDEN FECHAS
+  if (end <= start) {
+
+    alert(
+      "La salida debe ser posterior"
+    );
+
+    return;
+  }
+
+  // 🚫 ENTEROS
+  if (
+    !Number.isInteger(
+      propertyStore.guests.adultos
+    )
+  ) {
+
+    alert(
+      "Los huéspedes deben ser enteros"
+    );
+
+    return;
+  }
+
+  // 🚫 MINIMO
+  if (
+    propertyStore.guests.adultos < 1
+  ) {
+
+    alert(
+      "Debe haber al menos 1 huésped"
+    );
+
+    return;
+  }
+
+  // 🚫 MAXIMO
+  const maxGuests =
+    property.value.max_guests || 1;
+
+  if (
+    propertyStore.guests.adultos >
+    maxGuests
+  ) {
+
+    alert(
+      `Máximo ${maxGuests} huéspedes`
+    );
+
+    return;
+  }
+
+  // 🚫 BLOQUEADO
+  if (
+    isDateBlocked(start, end)
+  ) {
+
+    alert(
+      "Estas fechas ya están reservadas"
+    );
+
     return;
   }
 
   try {
-    // 🔎 3. VALIDAR DISPONIBILIDAD
-    const res = await api.get("/bookings/check-availability", {
-      params: {
-        property_id: property.id,
-        start_date: propertyStore.dateRange.start,
-        end_date: propertyStore.dateRange.end
-      }
-    });
-    const maxGuests = property?.max_guests || 1;
 
-    if (propertyStore.guests.adultos < 1) {
-      alert("Debe haber al menos 1 huésped");
-      return;
-    }
-    
-    if (propertyStore.guests.adultos > maxGuests) {
-      alert(`Máximo ${maxGuests} huéspedes`);
-      return;
-    }
+    const res =
+      await api.get(
+        "/bookings/check-availability",
+        {
+          params: {
+            property_id:
+              property.value.id,
+
+            start_date:
+              propertyStore.dateRange.start,
+
+            end_date:
+              propertyStore.dateRange.end
+          }
+        }
+      );
 
     if (!res.data.available) {
-      alert("No disponible en esas fechas");
+
+      alert(
+        "No disponible"
+      );
+
       return;
     }
 
-    // 💳 4. ABRIR MODAL
+    // 💳 MODAL
     showPayment.value = true;
 
   } catch (error) {
+
     console.error(error);
-    alert("Error validando disponibilidad");
+
+    alert(
+      "Error validando disponibilidad"
+    );
   }
 };
 
-// CÁLCULO DE NOCHES Y PRECIO TOTAL
-  const nights = computed(() => {
-    if (!propertyStore.dateRange.start || !propertyStore.dateRange.end) return 1;
 
-    const start = new Date(propertyStore.dateRange.start);
-    const end = new Date(propertyStore.dateRange.end);
+// =====================================
+// PAGO EXITOSO
+// =====================================
 
-    const diff = (end - start) / (1000 * 60 * 60 * 24);
-
-    return diff > 0 ? diff : 1;
-  });
-
-  const totalPrice = computed(() => {
-  if (!property) return 0;
-  return property.price * nights.value;
-  });
-
-//  PAGO EXITOSO
 const handleSuccess = async () => {
+
   try {
+
     await bookingStore.createBooking({
-      property_id: property.id,
-      start_date: propertyStore.dateRange.start,
-      end_date: propertyStore.dateRange.end
+
+      property_id:
+        property.value.id,
+
+      start_date:
+        propertyStore.dateRange.start,
+
+      end_date:
+        propertyStore.dateRange.end
+
     });
 
     alert("¡Reserva exitosa!");
+
     showPayment.value = false;
 
+    await loadBlockedDates();
+
   } catch (error) {
+
     console.error(error);
-    alert("Error creando la reserva");
+
+    alert(
+      "Error creando reserva"
+    );
   }
 };
+
+
+// =====================================
+// MOUNT
+// =====================================
+
+onMounted(async () => {
+
+  if (
+    property.value?.image?.length
+  ) {
+
+    imgSrc.value =
+      property.value.image[0];
+  }
+
+  await loadBlockedDates();
+
+  await loadReviews();
+
+  await validateReview();
+
+});
 </script>
