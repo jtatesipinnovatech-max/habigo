@@ -1,24 +1,65 @@
 const pool = require('../config/db');
 
 // ===============================
-// 🔍 Obtener propiedades
+//  Obtener propiedades
 // ===============================
-const getAllProperties = async (city) => {
-  let query = 'SELECT * FROM properties WHERE is_active = true';
-  let values = [];
+const getAllProperties = async (filters = {}) => {
 
+  const { city, guests, start, end } = filters;
+
+  let query = `
+    SELECT *
+    FROM properties
+    WHERE is_active = true
+  `;
+
+  const values = [];
+
+  // 🔍 FILTRO CIUDAD
   if (city) {
-    query += ' WHERE LOWER(city) LIKE $1';
     values.push(`%${city.toLowerCase()}%`);
+
+    query += `
+      AND LOWER(city) LIKE $${values.length}
+    `;
+  }
+
+  // 👥 FILTRO HUÉSPEDES
+  if (guests) {
+    values.push(Number(guests));
+
+    query += `
+      AND max_guests >= $${values.length}
+    `;
+  }
+
+  // 📅 FILTRO FECHAS
+  if (start && end) {
+
+    values.push(start);
+    values.push(end);
+
+    query += `
+      AND id NOT IN (
+        SELECT property_id
+        FROM bookings
+        WHERE status != 'cancelled'
+        AND (
+          start_date <= $${values.length}
+          AND end_date >= $${values.length - 1}
+        )
+      )
+    `;
   }
 
   const result = await pool.query(query, values);
+
   return result.rows;
 };
 
 
 // ===============================
-// 🏡 Crear propiedad
+//  Crear propiedad
 // ===============================
 const createProperty = async ({
   title,
@@ -28,12 +69,13 @@ const createProperty = async ({
   user_id,
   address,
   image,
-  max_guests
+  max_guests,
+  amenities
 }) => {
   const result = await pool.query(
     `INSERT INTO properties
-     (title, description, city, price, user_id, address, image, max_guests)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+     (title, description, city, price, user_id, address, image, max_guests, amenities )
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
      RETURNING *`,
     [
       title,
@@ -43,7 +85,8 @@ const createProperty = async ({
       user_id,
       address,
       image,
-      max_guests || 1 // 🔥 valor por defecto
+      max_guests || 1, //  valor por defecto
+      amenities || [] //  valor por defecto
     ]
   );
 
@@ -52,7 +95,7 @@ const createProperty = async ({
 
 
 // ===============================
-// 👤 Propiedades por usuario
+//  Propiedades por usuario
 // ===============================
 const getPropertiesByUser = async (user_id) => {
   const result = await pool.query(
@@ -65,7 +108,7 @@ const getPropertiesByUser = async (user_id) => {
 
 
 // ===============================
-// ✏️ Actualizar propiedad
+//  Actualizar propiedad
 // ===============================
 const updateProperty = async (id, user_id, data) => {
   const {
@@ -107,7 +150,7 @@ const updateProperty = async (id, user_id, data) => {
 
 
 // ===============================
-// 🗑️ Eliminar propiedad
+//  Eliminar propiedad
 // ===============================
 const deleteProperty = async (id, user_id) => {
   const result = await pool.query(
@@ -120,7 +163,7 @@ const deleteProperty = async (id, user_id) => {
 
   return result.rows[0];
 };
-// 📦 EXPORTS
+//  EXPORTS
 // ===============================
 module.exports = {
   getAllProperties,

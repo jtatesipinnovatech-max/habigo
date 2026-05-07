@@ -1,16 +1,29 @@
 import api from "./api";
 
-export const getProperties = async () => {
-  const res = await api.get("/properties");
-  return res.data;
-};
+export const getProperties = async (filters = {}) => {
 
-export const createProperty = async (propertyData) => {
-  const res = await api.post("/properties", propertyData);
-  return res.data;
-};
+  const params = {};
 
-export const getMyProperties = async () => {
-  const res = await api.get("/properties/my");
+  // 🔍 ciudad
+  if (filters.city) {
+    params.city = filters.city;
+  }
+
+  // 👥 huéspedes
+  if (filters.guests) {
+    params.guests = filters.guests;
+  }
+  if (filters.start) {
+    params.start = filters.start;
+  }
+
+  if (filters.end) {
+    params.end = filters.end;
+  }
+
+  const res = await api.get("/properties", {
+    params
+  });
+
   return res.data;
 };

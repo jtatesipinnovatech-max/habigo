@@ -94,29 +94,32 @@ export const usePropertyStore = defineStore('property', {
     },
 
     //  TODAS LAS PROPIEDADES
-    async fetchProperties() {
-      try {
-        this.loading = true;
-        const data = await getProperties();
+      async fetchProperties(filters = {}) {
+        try {
+          this.loading = true;
 
-        this.properties = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          description: p.description || '',
-          location: p.city,
-          address: p.address,
-          price: Number(p.price),
-          rating: 4.5,
-          image: p.image || "/default.jpg",
-          is_active: p.is_active,
-        }));
+          const data = await getProperties(filters);
 
-      } catch (error) {
-        console.error("Error cargando propiedades", error);
-      } finally {
-        this.loading = false;
-      }
-    },
+          this.properties = data.map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description || '',
+            location: p.city,
+            address: p.address,
+            price: Number(p.price),
+            rating: 4.5,
+            image: p.image || "/default.jpg",
+            amenities: p.amenities || [],
+            max_guests: p.max_guests || 1
+          }));
+
+        } catch (error) {
+          console.error("Error cargando propiedades", error);
+
+        } finally {
+          this.loading = false;
+        }
+      },
         async updateProperty(id, data) {
       try {
         const res = await api.put(`/properties/${id}`, data, {

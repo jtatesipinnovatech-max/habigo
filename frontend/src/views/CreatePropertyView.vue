@@ -81,6 +81,31 @@
 </section>
 
       <section v-if="formStore.currentStep === 5" class="step">
+        <h1 class="step__title">¿Qué ofrece tu propiedad?</h1>
+        <p class="step__subtitle">
+          Selecciona los servicios disponibles
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+
+          <label
+            v-for="a in amenitiesList"
+            :key="a.value"
+            class="flex items-center gap-2 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              :value="a.value"
+              v-model="formStore.form.amenities"
+            />
+
+            <span>{{ a.label }}</span>
+          </label>
+
+        </div>
+      </section>
+
+      <section v-if="formStore.currentStep === 6" class="step">
         <h1 class="step__title">Describe tu propiedad</h1>
 
         <p class="step__subtitle">
@@ -100,7 +125,7 @@
         </div>
       </section>
 
-      <section v-if="formStore.currentStep === 6" class="step">
+      <section v-if="formStore.currentStep === 7" class="step">
         <h1 class="step__title">Ponle nombre y precio a tu propiedad</h1>
         <p class="step__subtitle">
           Estos serán los primeros datos que verán los huéspedes.
@@ -171,73 +196,126 @@ import SpaceTypeSelector from '../components/SpaceTypeSelector.vue';
 
 const images = ref([]);
 const previewImages = ref([]);
+
 const router = useRouter();
 const formStore = usePropertyFormStore();
 const propertyStore = usePropertyStore();
-console.log("PAYLOAD:", formStore.payload);
 
 const loading = ref(false);
 const errorMsg = ref('');
 const imageError = ref(false);
 
-watch(() => formStore.form.image, () => { imageError.value = false; });
+watch(() => formStore.form.image, () => {
+  imageError.value = false;
+});
 
+
+//  VALIDACIÓN POR PASOS (ACTUALIZADA)
 const canContinue = computed(() => {
   switch (formStore.currentStep) {
-    case 1: return !!formStore.spaceType;
-    case 2: return formStore.maxGuests >= 1;
-    case 3: 
+    case 1:
+      return !!formStore.spaceType;
+
+    case 2:
+      return formStore.maxGuests >= 1;
+
+    case 3:
       return (
         formStore.form.city.trim().length >= 2 &&
         formStore.form.address.trim().length >= 5
-      );  
-    case 4: return images.value.length >= 1;
-    case 5: return formStore.form.description.trim().length >= 10;
+      );
+
+    case 4:
+      return images.value.length >= 1;
+
+    case 5:
+      return formStore.form.amenities.length >= 1; // 🔥 NUEVO
+
     case 6:
+      return formStore.form.description.trim().length >= 10;
+
+    case 7:
       return (
         formStore.form.title.trim().length >= 4 &&
         Number(formStore.form.price) > 0
       );
-    default: return true;
+
+    default:
+      return true;
   }
 });
 
+
+//  LISTA DE AMENITIES (UI)
+const amenitiesList = [
+  { label: "Wifi", value: "wifi" },
+  { label: "Aire acondicionado", value: "aire" },
+  { label: "TV", value: "tv" },
+  { label: "Estacionamiento", value: "parking" },
+  { label: "Cocina", value: "cocina" },
+  { label: "Lavadora", value: "lavadora" },
+  { label: "Piscina", value: "piscina" },
+  { label: "Seguridad 24h", value: "seguridad" }
+];
+
+
+//  SIGUIENTE PASO
 function handleNext() {
   if (!canContinue.value) return;
   formStore.nextStep();
 }
 
+
+//  SUBMIT COMPLETO
 async function handleSubmit() {
   if (!canContinue.value) return;
 
   loading.value = true;
   errorMsg.value = '';
 
-  const formData = new FormData();
+  try {
+    const formData = new FormData();
 
-formData.append("title", formStore.form.title);
-formData.append("description", formStore.form.description);
-formData.append("city", formStore.form.city);
-formData.append("price", formStore.form.price);
-formData.append("address", formStore.form.address);
+    // 🔹 DATOS
+    formData.append("title", formStore.form.title);
+    formData.append("description", formStore.form.description);
+    formData.append("city", formStore.form.city);
+    formData.append("price", formStore.form.price);
+    formData.append("address", formStore.form.address);
 
-// imágenes
-images.value.forEach(img => {
-  formData.append("images", img);
-});
+    //  HUÉSPEDES
+    formData.append("max_guests", formStore.maxGuests);
 
-const result = await propertyStore.createProperty(formData);
+    //  AMENITIES (CLAVE)
+    formData.append(
+      "amenities",
+      JSON.stringify(formStore.form.amenities)
+    );
+
+    //  IMÁGENES
+    images.value.forEach(img => {
+      formData.append("images", img);
+    });
+
+    const result = await propertyStore.createProperty(formData);
+
+    if (result.success) {
+      formStore.reset();
+      router.push('/');
+    } else {
+      errorMsg.value = result.message;
+    }
+
+  } catch (error) {
+    console.error(error);
+    errorMsg.value = "Error creando propiedad";
+  }
 
   loading.value = false;
-
-  if (result.success) {
-    formStore.reset();
-    router.push('/');
-  } else {
-    errorMsg.value = result.message;
-  }
 }
 
+
+//  MANEJO DE IMÁGENES
 function handleImages(e) {
   const files = Array.from(e.target.files);
 
@@ -254,9 +332,13 @@ function handleImages(e) {
   images.value = files;
 
   // preview
-  previewImages.value = files.map(file => URL.createObjectURL(file));
+  previewImages.value = files.map(file =>
+    URL.createObjectURL(file)
+  );
 }
 
+
+//  GUARDAR Y SALIR
 function saveAndExit() {
   router.push('/');
 }

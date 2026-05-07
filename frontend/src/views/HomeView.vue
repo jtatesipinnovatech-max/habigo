@@ -4,7 +4,7 @@
     <!-- CATEGORÍAS -->
     <div class="border-b sticky top-0 bg-white z-40">
       <div class="max-w-7xl mx-auto px-6">
-        <div class="flex gap-8 overflow-x-auto scrollbar-hide py-4">
+        <div class="flex justify-center items-center gap-10 py-4 flex-wrap">
           <button
             v-for="cat in categories"
             :key="cat.label"

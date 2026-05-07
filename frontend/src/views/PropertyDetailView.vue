@@ -49,11 +49,21 @@
           <div class="border-b pb-6 mb-6">
             <h2 class="text-xl font-semibold mb-4">Lo que ofrece este lugar</h2>
             <div class="grid grid-cols-2 gap-3">
-              <div v-for="amenity in amenities" :key="amenity.label"
-                class="flex items-center gap-3 text-gray-700">
-                <component :is="amenity.icon" :size="20" stroke-width="1.5" />
-                <span class="text-sm">{{ amenity.label }}</span>
-              </div>
+              <div 
+                  v-for="a in property?.amenities || []" 
+                  :key="a"
+                  class="flex items-center gap-3 text-gray-700"
+                >
+                  <component 
+                    :is="amenityMap[a]?.icon" 
+                    :size="20" 
+                    stroke-width="1.5" 
+                  />
+
+                  <span class="text-sm">
+                    {{ amenityMap[a]?.label }}
+                  </span>
+                </div>
             </div>
           </div>
 
@@ -102,6 +112,7 @@
               <input
                 type="number"
                 min="1"
+                step="1"
                 :max="property?.max_guests || 1"
                 v-model.number="propertyStore.guests.adultos"
                 class="text-sm text-gray-700 w-full"
@@ -110,7 +121,7 @@
                 Esta propiedad permite hasta {{ property?.max_guests }} huéspedes
               </p>
               <p 
-                v-if="propertyStore.guests.adultos >= property?.max_guests"
+                v-if="propertyStore.guests.adultos > property?.max_guests"
                 class="text-xs text-red-500 mt-1"
               >
                 Límite de huéspedes alcanzado
@@ -218,17 +229,17 @@ const imgSrc = ref(property?.image?.[0] || '/default.jpg');
 // MODAL
 const showPayment = ref(false);
 
-// AMENITIES
-const amenities = [
-  { icon: Wifi,            label: 'Wifi' },
-  { icon: Wind,            label: 'Aire acondicionado' },
-  { icon: Tv,              label: 'TV' },
-  { icon: Car,             label: 'Estacionamiento' },
-  { icon: UtensilsCrossed, label: 'Cocina' },
-  { icon: WashingMachine,  label: 'Lavadora' },
-  { icon: Waves,           label: 'Piscina' },
-  { icon: Shield,          label: 'Seguridad 24h' },
-];
+//AMENITES
+const amenityMap = {
+  wifi: { label: "Wifi", icon: Wifi },
+  aire: { label: "Aire acondicionado", icon: Wind },
+  tv: { label: "TV", icon: Tv },
+  parking: { label: "Estacionamiento", icon: Car },
+  cocina: { label: "Cocina", icon: UtensilsCrossed },
+  lavadora: { label: "Lavadora", icon: WashingMachine },
+  piscina: { label: "Piscina", icon: Waves },
+  seguridad: { label: "Seguridad 24h", icon: Shield }
+};
 
 // PRICE FORMAT
 const formatPrice = (price) => {
@@ -238,7 +249,6 @@ const formatPrice = (price) => {
     minimumFractionDigits: 0
   }).format(price);
 };
-
 
 //  RESERVAR (FLUJO REAL)
 const book = async () => {
@@ -253,6 +263,10 @@ const book = async () => {
       );
     });
   };
+  if (!Number.isInteger(propertyStore.guests.adultos)) {
+  alert("Los huéspedes deben ser un número entero");
+      return;
+    }
 
   const startDateObj = new Date(propertyStore.dateRange.start);
   const endDateObj = new Date(propertyStore.dateRange.end);

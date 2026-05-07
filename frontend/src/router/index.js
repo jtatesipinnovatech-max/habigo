@@ -3,7 +3,7 @@ import MainLayout from "../layouts/MainLayout.vue";
 import HomeView from "../views/HomeView.vue";
 import AuthView from "../views/AuthView.vue";
 import CreatePropertyView from "../views/CreatePropertyView.vue";
-
+import SearchResultsView from '../views/SearchResultsView.vue';
 const routes = [
   {
     path: "/",
@@ -12,6 +12,11 @@ const routes = [
       {
         path: "",
         component: HomeView, 
+      },
+      {
+        path: 'search',
+        name: 'search',
+        component: SearchResultsView
       },
       {
       path: "/bookings",

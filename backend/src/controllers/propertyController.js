@@ -4,9 +4,9 @@ const cloudinary = require("../config/cloudinary");
 // 🔹 Obtener todas las propiedades (público)
 const getProperties = async (req, res) => {
   try {
-    const data = await PropertyModel.getAllProperties(req.query.city);
+    const data = await PropertyModel.getAllProperties(req.query);
 
-    console.log(" DATA EN CONTROLLER:", data);
+    console.log("DATA EN CONTROLLER:", data);
 
     res.json(data);
   } catch (error) {
@@ -18,8 +18,17 @@ const getProperties = async (req, res) => {
 // 🔹 Crear propiedad (solo host)
 const createProperty = async (req, res) => {
   try {
-    const { title, description, city, price, address } = req.body;
+    const {
+      title,
+      description,
+      city,
+      price,
+      address,
+      max_guests,
+      amenities
+    } = req.body;
 
+    // 🔴 VALIDACIONES
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         error: "Debes subir al menos una imagen"
@@ -32,7 +41,16 @@ const createProperty = async (req, res) => {
       });
     }
 
-    // 🔥 subir imágenes a Cloudinary
+    // 🔥 PARSEAR AMENITIES (IMPORTANTE)
+    let parsedAmenities = [];
+
+    if (amenities) {
+      parsedAmenities = typeof amenities === "string"
+        ? JSON.parse(amenities)
+        : amenities;
+    }
+
+    // 🔥 SUBIR IMÁGENES A CLOUDINARY
     const imageUrls = [];
 
     for (const file of req.files) {
@@ -40,15 +58,21 @@ const createProperty = async (req, res) => {
       imageUrls.push(result.secure_url);
     }
 
+    // 🔥 CREAR PROPIEDAD
     const property = await PropertyModel.createProperty({
       title,
       description,
       city,
       price,
       address,
-      image: imageUrls, //  array de imágenes
-      user_id: req.user.id
+      image: imageUrls,
+      user_id: req.user.id,
+      max_guests,
+      amenities: parsedAmenities
     });
+
+    console.log("BODY:", req.body);
+    console.log("AMENITIES RAW:", req.body.amenities);
 
     res.json(property);
 
@@ -56,17 +80,13 @@ const createProperty = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Error creando propiedad" });
   }
-  console.log("BODY:", req.body);
-  console.log("FILES:", req.files);
 };
 
 // 🔹 Obtener propiedades del usuario (host)
 const getMyProperties = async (req, res) => {
   try {
     const data = await PropertyModel.getPropertiesByUser(req.user.id);
-
     res.json(data);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -121,7 +141,7 @@ const deleteProperty = async (req, res) => {
     }
 
     res.json({
-      message: 'Propiedad eliminada '
+      message: 'Propiedad eliminada'
     });
 
   } catch (error) {
