@@ -366,7 +366,7 @@ function saveAndExit() {
 .create-header__logo {
   font-size: 20px;
   font-weight: 700;
-  color: #e8404a;
+  color: #0d9488;
   text-decoration: none;
 }
 

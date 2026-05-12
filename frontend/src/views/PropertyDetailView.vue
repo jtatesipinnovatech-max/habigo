@@ -551,7 +551,6 @@ const totalPrice = computed(() => {
 // =====================================
 
 const loadReviews = async () => {
-
   try {
 
     const data =
@@ -559,17 +558,20 @@ const loadReviews = async () => {
         route.params.id
       );
 
-    reviews.value = data.reviews;
+    reviews.value = data.reviews || [];
 
     averageRating.value =
-      data.average || 0;
+      Number(data.average) || 0;
 
     totalReviews.value =
-      data.total || 0;
+      Number(data.total) || 0;
 
   } catch (error) {
-
     console.error(error);
+
+    reviews.value = [];
+    averageRating.value = 0;
+    totalReviews.value = 0;
   }
 };
 
@@ -586,10 +588,14 @@ const validateReview = async () => {
 
     return;
   }
+  if (!property.value) {
+      canReview.value = false;
+      return;
+    }
 
-  try {
+    try {
 
-    const data =
+      const data =
       await canReviewProperty(
         property.value.id
       );
@@ -597,8 +603,7 @@ const validateReview = async () => {
     canReview.value =
       data.canReview;
 
-    selectedBookingId.value =
-      data.bookingId;
+    selectedBookingId.value = data.bookingId;
 
   } catch (error) {
 
@@ -614,40 +619,27 @@ const validateReview = async () => {
 // =====================================
 
 const submitReview = async () => {
-
   try {
 
     await createReview({
-
-      property_id:
-        property.value.id,
-
-      booking_id:
-        selectedBookingId.value,
-
-      rating:
-        rating.value,
-
-      comment:
-        comment.value
-
+      property_id: property.value.id,
+      booking_id: selectedBookingId.value,
+      rating: rating.value,
+      comment: comment.value
     });
 
     comment.value = '';
-
     rating.value = 5;
 
     await loadReviews();
+    await validateReview();
 
-    alert("Reseña publicada");
+    alert('Reseña publicada');
 
   } catch (error) {
-
-    console.error(error);
-
     alert(
       error.response?.data?.error ||
-      "Error creando reseña"
+      'Error creando reseña'
     );
   }
 };

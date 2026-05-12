@@ -45,10 +45,7 @@ const createReview = async ({
 // RESEÑAS POR PROPIEDAD
 // =====================================
 
-const getReviewsByProperty = async (
-  property_id
-) => {
-
+const getReviewsByProperty = async (property_id) => {
   const result = await pool.query(
     `
     SELECT
@@ -56,12 +53,12 @@ const getReviewsByProperty = async (
       r.rating,
       r.comment,
       r.created_at,
-      u.name AS user_name
+      u.email AS user_name
 
     FROM reviews r
 
     JOIN users u
-    ON r.user_id = u.id
+      ON r.user_id = u.id
 
     WHERE r.property_id = $1
 
@@ -123,15 +120,12 @@ const checkCompletedBooking = async (
     AND user_id = $2
 
     AND end_date < NOW()
-
-    AND status = 'confirmed'
     `,
     [booking_id, user_id]
   );
 
   return result.rows[0];
 };
-
 
 // =====================================
 // VALIDAR SI PUEDE RESEÑAR
@@ -151,8 +145,6 @@ const getReviewableBooking = async (
     WHERE b.property_id = $1
 
     AND b.user_id = $2
-
-    AND b.status = 'confirmed'
 
     AND b.end_date < NOW()
 

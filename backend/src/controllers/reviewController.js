@@ -101,15 +101,10 @@ const postReview = async (req, res) => {
 // OBTENER RESEÑAS
 // =====================================
 
-const getPropertyReviews = async (
-  req,
-  res
-) => {
-
+const getPropertyReviews = async (req, res) => {
   const { id } = req.params;
 
   try {
-
     const reviews =
       await ReviewModel.getReviewsByProperty(id);
 
@@ -117,24 +112,16 @@ const getPropertyReviews = async (
       await ReviewModel.getAverageRating(id);
 
     res.json({
-
-      average:
-        stats.average || 0,
-
-      total:
-        stats.total || 0,
-
-      reviews
-
+      average: Number(stats.average) || 0,
+      total: Number(stats.total) || 0,
+      reviews: reviews || []
     });
 
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
-      error:
-        'Error obteniendo reseñas'
+      error: 'Error obteniendo reseñas'
     });
   }
 };
